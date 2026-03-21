@@ -1,0 +1,86 @@
+/* ==========================================================================
+   Design Tokens — «Оптимизация товарных потоков» (Благода)
+   Extracted from Figma: node 227:56
+   ========================================================================== */
+
+:root {
+  /* ── Brand ─────────────────────────────────────────────────────────────── */
+  --color-brand-primary: #992b2c;       /* Active tab, logo accent */
+  --color-brand-action: #ae5265;        /* Primary CTA (e.g. "Оформить заказ") */
+  --color-brand-link: #00387a;          /* Links, "Очистить фильтры" */
+
+  /* ── Backgrounds ───────────────────────────────────────────────────────── */
+  --color-bg-page: #f4f0f7;            /* Main page background */
+  --color-bg-header: #fcf1ef;          /* Top header bar */
+  --color-bg-surface: #ffffff;         /* Cards, tabs, panels */
+  --color-bg-surface-muted: #f7f5f8;  /* Stat-cards, subtle surfaces */
+  --color-bg-surface-alt: #fcfafd;    /* Chart area */
+  --color-bg-chip: #f1ebf5;           /* Action chips ("Перейти к списку") */
+  --color-bg-secondary-btn: #eeeaeb;  /* Secondary button */
+  --color-bg-footer: #d9d9d9;         /* Footer */
+
+  /* ── Text ───────────────────────────────────────────────────────────────── */
+  --color-text-primary: #000000;
+  --color-text-on-surface: #1d1b20;    /* M3/sys/light/on-surface */
+  --color-text-secondary: #3a3a3a;     /* Subtitles, date labels */
+  --color-text-tertiary: #4a4a4a;      /* Hint text (e.g. "— Магазин №12") */
+  --color-text-on-brand: #ffffff;      /* Text on brand/dark backgrounds */
+  --color-text-link: #00387a;          /* Links, same as brand-link */
+
+  /* ── Semantic / Status ─────────────────────────────────────────────────── */
+  --color-status-critical: #954757;    /* Deficit severity bar */
+  --color-status-warning: #d27c4e;     /* Excess severity bar */
+  --color-status-negative: #bd5d4b;    /* Negative % change text */
+
+  /* ── Borders ───────────────────────────────────────────────────────────── */
+  --color-border-strong: #535353;      /* Recommendations panel */
+  --color-border-default: #7e7e7e;     /* Tabs, dividers */
+  --color-border-muted: #848484;       /* Stat cards */
+
+  /* ── Icons ──────────────────────────────────────────────────────────────── */
+  --color-icon-default: #1e1e1e;
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font-family: 'Museo Cyrl', sans-serif;
+
+  --font-weight-regular: 500;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+  --font-size-xs: 14px;               /* Hints, sub-labels */
+  --font-size-sm: 16px;               /* Body text, tabs, filters */
+  --font-size-md: 18px;               /* Card titles, recommendations */
+  --font-size-lg: 20px;               /* Section headings */
+  --font-size-xl: 30px;               /* KPI values ("114 шт.") */
+
+  --line-height-normal: normal;
+  --letter-spacing-tight: -0.32px;    /* Small secondary labels */
+  --letter-spacing-xs: -0.28px;       /* 14px labels */
+
+  /* ── Spacing ────────────────────────────────────────────────────────────── */
+  --space-1: 6px;
+  --space-2: 9px;
+  --space-3: 10px;
+  --space-4: 11px;
+  --space-5: 12px;
+  --space-6: 15px;
+  --space-7: 16px;
+  --space-8: 17px;
+  --space-9: 18px;
+  --space-10: 22px;
+
+  /* ── Border Radius ──────────────────────────────────────────────────────── */
+  --radius-sm: 5px;                   /* Filters, stat-cards, buttons, chips */
+  --radius-md: 8px;                   /* Main content container */
+
+  /* ── Shadows ────────────────────────────────────────────────────────────── */
+  /* (не определены в текущем дизайне) */
+
+  /* ── Layout ─────────────────────────────────────────────────────────────── */
+  --layout-max-width: 1440px;
+  --layout-side-padding: 60px;
+  --layout-content-padding: 90px;
+  --header-height: 72px;
+  --tab-bar-height: 51px;
+  --footer-height: 110px;
+}

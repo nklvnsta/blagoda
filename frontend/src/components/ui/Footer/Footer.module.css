@@ -1,0 +1,17 @@
+.footer {
+  background-color: var(--color-bg-footer);
+  height: var(--footer-height);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--layout-side-padding);
+}
+
+.info {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  text-align: right;
+}
