@@ -7,14 +7,22 @@ python manage.py seed
   - 20 товаров
   - ~60 партий на складе (разные статусы, часть просроченных)
   - ~120 отгрузок по магазинам
+  - ~18 000 записей продаж (180 дней × 20 товаров × ~5 магазинов)
+  - 100 остатков (20 товаров × 5 магазинов)
+  - отклонения (дефицит/избыток)
+  - ~3 000 ежедневных снимков остатков (30 дней)
 """
 
 import random
+import math
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from core.models import Category, Shop, Product, Batch, BatchShipment
+from core.models import (
+    Category, Shop, Product, Batch, BatchShipment,
+    Sales, Inventory, StockDeviation, InventorySnapshot,
+)
 
 
 # ─── Данные ──────────────────────────────────────────────────────────────────
@@ -76,33 +84,35 @@ SHOPS = [
     },
 ]
 
-# (name, unit, shelf_life_days, подкатегория)
+# (name, unit, price, shelf_life_days, category, average_sales_per_day)
 PRODUCTS = [
     # Молочные
-    ("Молоко 3.2% Простоквашино 1л",   "l",   7,   "Молоко"),
-    ("Молоко 2.5% Домик в деревне 1л", "l",   7,   "Молоко"),
-    ("Кефир 2.5% Активиа 500г",        "g",   14,  "Кефир и йогурты"),
-    ("Йогурт клубника Danone 150г",    "g",   21,  "Кефир и йогурты"),
-    ("Сыр Российский 45% кг",          "kg",  90,  "Сыры"),
-    ("Масло сливочное 82.5% 200г",     "g",   60,  "Масло и сметана"),
-    ("Сметана 20% 400г",               "g",   21,  "Масло и сметана"),
+    ("Молоко 3.2% Простоквашино 1л",   "l",   7,   25,   "Молоко",             25),
+    ("Молоко 2.5% Домик в деревне 1л", "l",   7,   20,   "Молоко",             20),
+    ("Кефир 2.5% Активиа 500г",        "g",   14,  15,   "Кефир и йогурты",    15),
+    ("Йогурт клубника Danone 150г",    "g",   21,  18,   "Кефир и йогурты",    18),
+    ("Сыр Российский 45% кг",          "kg",  90,  5,    "Сыры",                5),
+    ("Масло сливочное 82.5% 200г",     "g",   60,  8,    "Масло и сметана",     8),
+    ("Сметана 20% 400г",               "g",   21,  12,   "Масло и сметана",    12),
     # Мясо
-    ("Фарш говяжий охл. 500г",         "g",   3,   "Говядина"),
-    ("Стейк из говядины охл. 300г",    "g",   5,   "Говядина"),
-    ("Свинина шея охл. кг",            "kg",  5,   "Свинина"),
-    ("Куриное филе охл. кг",           "kg",  5,   "Курица"),
-    ("Куриные крылья охл. кг",         "kg",  4,   "Курица"),
-    ("Пельмени Сибирские 900г",        "g",   180, "Полуфабрикаты"),
+    ("Фарш говяжий охл. 500г",         "g",   3,   10,   "Говядина",           10),
+    ("Стейк из говядины охл. 300г",    "g",   5,   4,    "Говядина",            4),
+    ("Свинина шея охл. кг",            "kg",  5,   6,    "Свинина",             6),
+    ("Куриное филе охл. кг",           "kg",  5,   14,   "Курица",             14),
+    ("Куриные крылья охл. кг",         "kg",  4,   8,    "Курица",              8),
+    ("Пельмени Сибирские 900г",        "g",   180, 7,    "Полуфабрикаты",       7),
     # Хлеб
-    ("Хлеб Бородинский 400г",          "g",   5,   "Хлеб"),
-    ("Батон нарезной 400г",            "g",   3,   "Хлеб"),
-    ("Булочка сдобная 80г",            "g",   2,   "Булочки и сдоба"),
+    ("Хлеб Бородинский 400г",          "g",   5,   30,   "Хлеб",              30),
+    ("Батон нарезной 400г",            "g",   3,   25,   "Хлеб",              25),
+    ("Булочка сдобная 80г",            "g",   2,   20,   "Булочки и сдоба",   20),
     # Напитки
-    ("Сок яблочный Rich 1л",           "l",   365, "Соки"),
-    ("Вода Святой Источник 1.5л",      "l",   730, "Вода"),
-    ("Вода Черноголовка газ. 1л",      "l",   365, "Газированные напитки"),
-    ("Сок апельсиновый Tropicana 1л",  "l",   365, "Соки"),
+    ("Сок яблочный Rich 1л",           "l",   365, 6,    "Соки",                6),
+    ("Вода Святой Источник 1.5л",      "l",   730, 15,   "Вода",               15),
+    ("Вода Черноголовка газ. 1л",      "l",   365, 10,   "Газированные напитки", 10),
+    ("Сок апельсиновый Tropicana 1л",  "l",   365, 5,    "Соки",                5),
 ]
+
+SALES_PERIOD_DAYS = 180
 
 
 class Command(BaseCommand):
@@ -119,6 +129,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options["clear"]:
             self.stdout.write("Очищаем таблицы...")
+            StockDeviation.objects.all().delete()
+            InventorySnapshot.objects.all().delete()
+            Inventory.objects.all().delete()
+            Sales.objects.all().delete()
             BatchShipment.objects.all().delete()
             Batch.objects.all().delete()
             Product.objects.all().delete()
@@ -126,22 +140,27 @@ class Command(BaseCommand):
             Category.objects.all().delete()
             self.stdout.write(self.style.WARNING("Таблицы очищены"))
 
-        categories  = self._seed_categories()
-        shops       = self._seed_shops()
-        products    = self._seed_products(categories)
-        batches     = self._seed_batches(products)
+        categories = self._seed_categories()
+        shops      = self._seed_shops()
+        products   = self._seed_products(categories)
+        batches    = self._seed_batches(products)
         self._seed_shipments(batches, shops)
+        self._seed_sales(products, shops)
+        inventories = self._seed_inventory(products, shops)
+        self._seed_deviations(inventories)
+        self._seed_snapshots(products, shops)
 
         self.stdout.write(self.style.SUCCESS(
             f"\n✓ Готово: {len(categories)} категорий, {len(shops)} магазинов, "
-            f"{len(products)} товаров, {len(batches)} партий"
+            f"{len(products)} товаров, {Batch.objects.count()} партий, "
+            f"{Sales.objects.count()} продаж, {len(inventories)} остатков"
         ))
 
     # ── Категории ────────────────────────────────────────────────────────────
 
     def _seed_categories(self):
         self.stdout.write("Создаём категории...")
-        cat_map = {}  # name → Category instance
+        cat_map = {}
 
         for group in CATEGORIES:
             parent, _ = Category.objects.get_or_create(name=group["name"])
@@ -176,13 +195,14 @@ class Command(BaseCommand):
     def _seed_products(self, categories):
         self.stdout.write("Создаём товары...")
         products = []
-        for i, (name, unit, shelf_life, cat_name) in enumerate(PRODUCTS, start=1):
+        for i, (name, unit, price, shelf_life, cat_name, _avg_sales) in enumerate(PRODUCTS, start=1):
             sku = f"BLG-{i:04d}"
             product, _ = Product.objects.get_or_create(
                 sku=sku,
                 defaults={
                     "name":            name,
                     "unit":            unit,
+                    "price":           price,
                     "shelf_life_days": shelf_life,
                     "category":        categories[cat_name],
                 },
@@ -196,27 +216,23 @@ class Command(BaseCommand):
     def _seed_batches(self, products):
         self.stdout.write("Создаём партии...")
         today   = date.today()
-        batches = []
 
         for product in products:
             shelf = product.shelf_life_days or 30
-            # 2-4 партии на каждый товар
             for _ in range(random.randint(2, 4)):
-                # Дата производства — от 60 дней назад до сегодня
-                produced_days_ago  = random.randint(0, min(60, shelf - 1))
-                production_date    = today - timedelta(days=produced_days_ago)
-                expiry_date        = production_date + timedelta(days=shelf)
+                produced_days_ago = random.randint(0, min(60, shelf - 1))
+                production_date   = today - timedelta(days=produced_days_ago)
+                expiry_date       = production_date + timedelta(days=shelf)
 
                 qty = random.randint(50, 500)
 
-                # Намеренно создаём несколько просроченных партий
                 if random.random() < 0.1:
-                    expiry_date = today - timedelta(days=random.randint(1, 10))
-                    status      = Batch.Status.WRITTEN_OFF
+                    expiry_date   = today - timedelta(days=random.randint(1, 10))
+                    status        = Batch.Status.WRITTEN_OFF
                     qty_remaining = 0
                 else:
                     status        = Batch.Status.AVAILABLE
-                    qty_remaining = qty  # будет скорректировано при отгрузках
+                    qty_remaining = qty
 
                 received_days_ago = random.randint(0, produced_days_ago)
 
@@ -229,11 +245,8 @@ class Command(BaseCommand):
                     status             = status,
                     received_at        = today - timedelta(days=received_days_ago),
                 )
-                # Обходим save() чтобы не трогать quantity_remaining автоматически
                 Batch.objects.bulk_create([batch])
-                batches.append(batch)
 
-        # Перечитываем из БД чтобы получить pk
         batches = list(Batch.objects.filter(
             status__in=[Batch.Status.AVAILABLE, Batch.Status.PARTIAL]
         ).select_related("product"))
@@ -249,9 +262,8 @@ class Command(BaseCommand):
         shipments = []
 
         for batch in batches:
-            # Каждая партия частично отгружена в 1-3 магазина
-            target_shops   = random.sample(shops, k=random.randint(1, 3))
-            available      = batch.quantity_remaining
+            target_shops = random.sample(shops, k=random.randint(1, 3))
+            available    = batch.quantity_remaining
 
             if available == 0:
                 continue
@@ -259,7 +271,6 @@ class Command(BaseCommand):
             for shop in target_shops:
                 if available <= 0:
                     break
-                # Отгружаем от 10% до 40% партии в каждый магазин
                 max_ship = max(1, int(available * 0.4))
                 qty      = random.randint(1, max_ship)
                 qty      = min(qty, available)
@@ -274,11 +285,9 @@ class Command(BaseCommand):
                 ))
                 available -= qty
 
-            # Обновляем quantity_remaining и статус партии
             batch.quantity_remaining = available
             batch._update_status()
 
-        # Сохраняем всё разом
         BatchShipment.objects.bulk_create(shipments, batch_size=200)
         Batch.objects.bulk_update(
             batches,
@@ -287,3 +296,149 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(f"  → {len(shipments)} отгрузок")
+
+    # ── Продажи ──────────────────────────────────────────────────────────────
+
+    def _seed_sales(self, products, shops):
+        self.stdout.write("Создаём продажи (180 дней)...")
+        today = date.today()
+        rows  = []
+
+        avg_sales_map = {
+            p.sku: PRODUCTS[i][4]
+            for i, p in enumerate(products)
+        }
+
+        for product in products:
+            base = avg_sales_map.get(product.sku, 10)
+
+            for shop in shops:
+                shop_factor = random.uniform(0.6, 1.4)
+
+                for day_offset in range(SALES_PERIOD_DAYS):
+                    d = today - timedelta(days=day_offset)
+
+                    weekday_factor = 1.2 if d.weekday() >= 5 else 1.0
+                    seasonal = 1.0 + 0.15 * math.sin(2 * math.pi * d.timetuple().tm_yday / 365)
+                    trend = 1.0 + 0.0005 * (SALES_PERIOD_DAYS - day_offset)
+
+                    mean = base * shop_factor * weekday_factor * seasonal * trend
+                    qty  = max(0, int(random.gauss(mean, mean * 0.25)))
+
+                    if qty > 0:
+                        rows.append(Sales(
+                            product  = product,
+                            shop     = shop,
+                            quantity = qty,
+                            date     = d,
+                        ))
+
+        Sales.objects.bulk_create(rows, batch_size=500)
+        self.stdout.write(f"  → {len(rows)} записей продаж")
+
+    # ── Остатки (Inventory) ──────────────────────────────────────────────────
+
+    def _seed_inventory(self, products, shops):
+        self.stdout.write("Создаём остатки...")
+        inventories = []
+
+        for i, product in enumerate(products):
+            base_avg = PRODUCTS[i][4]
+
+            for shop in shops:
+                shop_avg = base_avg * random.uniform(0.7, 1.3)
+                safety   = random.choice([2, 3, 4])
+                cycle    = random.choice([5, 7, 10])
+
+                min_stock = int(shop_avg * safety)
+                max_stock = int(shop_avg * (safety + cycle))
+
+                # Текущий остаток: в большинстве случаев нормальный,
+                # но иногда дефицит или избыток
+                roll = random.random()
+                if roll < 0.15:
+                    current_qty = random.randint(0, max(1, min_stock - 1))
+                elif roll < 0.25:
+                    current_qty = random.randint(max_stock + 1, max_stock + int(shop_avg * 5))
+                else:
+                    current_qty = random.randint(min_stock, max_stock)
+
+                inv, _ = Inventory.objects.get_or_create(
+                    product=product,
+                    shop=shop,
+                    defaults={
+                        "current_qty":       current_qty,
+                        "min_stock":         min_stock,
+                        "max_stock":         max_stock,
+                        "avg_daily_sales":   round(shop_avg, 1),
+                        "safety_stock_days": safety,
+                        "reorder_cycle_days": cycle,
+                    },
+                )
+                inventories.append(inv)
+
+        self.stdout.write(f"  → {len(inventories)} остатков")
+        return inventories
+
+    # ── Отклонения (StockDeviation) ──────────────────────────────────────────
+
+    def _seed_deviations(self, inventories):
+        self.stdout.write("Создаём отклонения...")
+        deviations = []
+
+        for inv in inventories:
+            if inv.deficit > 0:
+                deviations.append(StockDeviation(
+                    inventory      = inv,
+                    deviation_type = StockDeviation.Type.DEFICIT,
+                    deviation_qty  = inv.deficit,
+                    is_active      = True,
+                ))
+            elif inv.surplus > 0:
+                deviations.append(StockDeviation(
+                    inventory      = inv,
+                    deviation_type = StockDeviation.Type.SURPLUS,
+                    deviation_qty  = inv.surplus,
+                    is_active      = True,
+                ))
+
+        StockDeviation.objects.bulk_create(deviations, batch_size=200)
+        self.stdout.write(f"  → {len(deviations)} отклонений ({sum(1 for d in deviations if d.deviation_type == 'deficit')} дефицитов, {sum(1 for d in deviations if d.deviation_type == 'surplus')} избытков)")
+
+    # ── Снимки остатков (InventorySnapshot) ──────────────────────────────────
+
+    def _seed_snapshots(self, products, shops):
+        self.stdout.write("Создаём снимки остатков (30 дней)...")
+        today     = date.today()
+        snapshots = []
+
+        inv_map = {}
+        for inv in Inventory.objects.select_related("product", "shop"):
+            inv_map[(inv.product_id, inv.shop_id)] = inv
+
+        for product in products:
+            for shop in shops:
+                inv = inv_map.get((product.pk, shop.pk))
+                if not inv:
+                    continue
+
+                qty = inv.current_qty
+
+                for day_offset in range(30):
+                    d = today - timedelta(days=day_offset)
+
+                    daily_change = random.randint(
+                        -int(inv.avg_daily_sales * 0.5),
+                        int(inv.avg_daily_sales * 0.8),
+                    )
+                    snap_qty = max(0, qty + daily_change * (day_offset + 1) // 5)
+
+                    snapshots.append(InventorySnapshot(
+                        product       = product,
+                        shop          = shop,
+                        qty           = snap_qty,
+                        snapshot_date = d,
+                    ))
+
+        InventorySnapshot.objects.bulk_create(snapshots, batch_size=500, ignore_conflicts=True)
+        self.stdout.write(f"  → {len(snapshots)} снимков")
