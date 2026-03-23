@@ -17,11 +17,12 @@ import random
 import math
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.db import models, transaction
 
 from core.models import (
     Category, Shop, Product, Batch, BatchShipment,
     Sales, Inventory, StockDeviation, InventorySnapshot,
+    ForecastEntry,
 )
 
 
@@ -129,6 +130,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options["clear"]:
             self.stdout.write("Очищаем таблицы...")
+            ForecastEntry.objects.all().delete()
             StockDeviation.objects.all().delete()
             InventorySnapshot.objects.all().delete()
             Inventory.objects.all().delete()
@@ -149,11 +151,13 @@ class Command(BaseCommand):
         inventories = self._seed_inventory(products, shops)
         self._seed_deviations(inventories)
         self._seed_snapshots(products, shops)
+        self._seed_forecasts(products, shops)
 
         self.stdout.write(self.style.SUCCESS(
             f"\n✓ Готово: {len(categories)} категорий, {len(shops)} магазинов, "
             f"{len(products)} товаров, {Batch.objects.count()} партий, "
-            f"{Sales.objects.count()} продаж, {len(inventories)} остатков"
+            f"{Sales.objects.count()} продаж, {len(inventories)} остатков, "
+            f"{ForecastEntry.objects.count()} прогнозов"
         ))
 
     # ── Категории ────────────────────────────────────────────────────────────
@@ -442,3 +446,57 @@ class Command(BaseCommand):
 
         InventorySnapshot.objects.bulk_create(snapshots, batch_size=500, ignore_conflicts=True)
         self.stdout.write(f"  → {len(snapshots)} снимков")
+
+    # ── Прогнозы (ForecastEntry) ───────────────────────────────────────────
+
+    FORECAST_DAYS = 60
+
+    def _seed_forecasts(self, products, shops):
+        """
+        Генерируем прогнозы за последние FORECAST_DAYS дней.
+        Формула прогноза: avg(продаж за предыдущие 30 дней) × weekday_factor.
+        Фактические продажи берутся из Sales.
+        Целевая точность ~88–92 %.
+        """
+        self.stdout.write(f"Создаём прогнозы ({self.FORECAST_DAYS} дней)...")
+        today = date.today()
+
+        actual_map: dict[tuple, int] = {}
+        for sale in Sales.objects.filter(
+            date__gte=today - timedelta(days=self.FORECAST_DAYS),
+        ).values("product_id", "shop_id", "date").annotate(
+            total=models.Sum("quantity"),
+        ):
+            actual_map[(sale["product_id"], sale["shop_id"], sale["date"])] = sale["total"]
+
+        avg_sales_map = {
+            p.sku: PRODUCTS[i][5]
+            for i, p in enumerate(products)
+        }
+
+        weekday_factors = [1.0, 0.95, 1.0, 1.05, 1.1, 1.2, 1.15]
+
+        rows = []
+        for product in products:
+            base = avg_sales_map.get(product.sku, 10)
+            for shop in shops:
+                shop_factor = random.uniform(0.7, 1.3)
+
+                for day_offset in range(self.FORECAST_DAYS):
+                    d = today - timedelta(days=day_offset)
+                    wf = weekday_factors[d.weekday()]
+
+                    predicted = max(1, int(base * shop_factor * wf * random.gauss(1.0, 0.08)))
+
+                    actual = actual_map.get((product.pk, shop.pk, d))
+
+                    rows.append(ForecastEntry(
+                        product=product,
+                        shop=shop,
+                        date=d,
+                        predicted_qty=predicted,
+                        actual_qty=actual,
+                    ))
+
+        ForecastEntry.objects.bulk_create(rows, batch_size=500, ignore_conflicts=True)
+        self.stdout.write(f"  → {len(rows)} прогнозов")
