@@ -61,3 +61,4 @@ class InventorySnapshot(models.Model):
     class Meta:
         unique_together = [("product", "shop", "snapshot_date")]
         verbose_name    = "Снимок остатка"
+        verbose_name_plural = "Снимки остатков"
