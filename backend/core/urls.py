@@ -7,6 +7,8 @@ from core.views import (
     RevenueView,
     ForecastAccuracyView,
     SalesChartView,
+    CriticalStockView,
+    ProblemProductsView,
 )
 
 urlpatterns = [
@@ -16,4 +18,6 @@ urlpatterns = [
     path("dashboard/revenue/", RevenueView.as_view()),
     path("dashboard/forecast-accuracy/", ForecastAccuracyView.as_view()),
     path("dashboard/sales-chart/", SalesChartView.as_view()),
+    path("dashboard/critical-stock/", CriticalStockView.as_view()),
+    path("dashboard/problem-products/", ProblemProductsView.as_view()),
 ]

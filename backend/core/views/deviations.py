@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 
-from django.db.models import Sum
+from math import ceil
+
+from django.db.models import Sum, Max, Count, Q
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
@@ -22,6 +24,23 @@ class DeviationResponseSerializer(serializers.Serializer):
     previous_week = WeekDataSerializer()
     change_pct    = serializers.FloatField(help_text="Изменение к прошлой неделе, %")
     filters       = serializers.DictField(help_text="Применённые фильтры")
+
+class CriticalStockSerializer(serializers.Serializer):
+    product = serializers.CharField(help_text="Название товара")
+    shop = serializers.CharField(help_text="Название магазина")
+    deviation_qty = serializers.IntegerField(help_text="Количество отклонений")
+    deviation_type = serializers.CharField(help_text="Тип отклонения")
+    calculated_at = serializers.DateTimeField(help_text="Дата расчёта")
+
+
+class ProblemProductSerializer(serializers.Serializer):
+    product_id         = serializers.UUIDField(help_text="ID товара")
+    product            = serializers.CharField(help_text="Название товара")
+    total_deviation_qty = serializers.IntegerField(help_text="Суммарное отклонение (шт.)")
+    deficit_qty        = serializers.IntegerField(help_text="Суммарный дефицит (шт.)")
+    surplus_qty        = serializers.IntegerField(help_text="Суммарный избыток (шт.)")
+    affected_shops     = serializers.IntegerField(help_text="Количество магазинов с отклонением")
+    last_calculated_at = serializers.DateTimeField(help_text="Последняя дата расчёта")
 
 
 def _week_range(weeks_ago: int) -> tuple[date, date]:
@@ -151,4 +170,87 @@ class SurplusView(APIView):
         filters = {"shop": shop_id, "category": category_id}
         data = _build_data(StockDeviation.Type.SURPLUS, shop_id, category_ids, filters)
         serializer = DeviationResponseSerializer(data)
+        return Response(serializer.data)
+
+class CriticalStockView(APIView):
+    """
+    GET /api/dashboard/critical-stock/
+
+    Возвращает критические отклонения для всех магазинов и категорий
+    """
+
+    def get(self, request: Request) -> Response:
+        base_qs = StockDeviation.objects.filter(is_active=True)
+        max_qty = base_qs.aggregate(max_qty=Max("deviation_qty"))["max_qty"] or 0
+        if max_qty <= 0:
+            serializer = CriticalStockSerializer([], many=True)
+            return Response(serializer.data)
+
+        # Относительный порог: критичными считаем отклонения >= 60% от максимального.
+        # Это адаптируется под текущий масштаб данных и не требует "жёсткого" числа.
+        critical_threshold = ceil(max_qty * 0.6)
+
+        stock_deviations = (
+            base_qs
+            .filter(deviation_qty__gte=critical_threshold)
+            .select_related("inventory__product", "inventory__shop")
+            .order_by("-deviation_qty")
+        )
+        data = []
+        for stock_deviation in stock_deviations:
+            data.append({
+                "product": stock_deviation.inventory.product.name,
+                "shop": stock_deviation.inventory.shop.name,
+                "deviation_qty": stock_deviation.deviation_qty,
+                "deviation_type": stock_deviation.deviation_type,
+                "calculated_at": stock_deviation.calculated_at.isoformat(),
+            })
+        serializer = CriticalStockSerializer(data, many=True)
+        return Response(serializer.data)
+
+
+class ProblemProductsView(APIView):
+    """
+    GET /api/dashboard/problem-products/
+
+    Возвращает проблемные товары (агрегировано по сети) с относительным порогом:
+    товар считается проблемным, если его суммарное отклонение >= 60% от максимального.
+    """
+
+    def get(self, request: Request) -> Response:
+        grouped = (
+            StockDeviation.objects
+            .filter(is_active=True)
+            .values("inventory__product_id", "inventory__product__name")
+            .annotate(
+                total_deviation_qty=Sum("deviation_qty"),
+                deficit_qty=Sum("deviation_qty", filter=Q(deviation_type=StockDeviation.Type.DEFICIT)),
+                surplus_qty=Sum("deviation_qty", filter=Q(deviation_type=StockDeviation.Type.SURPLUS)),
+                affected_shops=Count("inventory__shop_id", distinct=True),
+                last_calculated_at=Max("calculated_at"),
+            )
+            .order_by("-total_deviation_qty")
+        )
+
+        max_total = grouped.aggregate(max_total=Max("total_deviation_qty"))["max_total"] or 0
+        if max_total <= 0:
+            serializer = ProblemProductSerializer([], many=True)
+            return Response(serializer.data)
+
+        threshold = ceil(max_total * 0.6)
+        items = []
+        for row in grouped:
+            if row["total_deviation_qty"] < threshold:
+                continue
+            items.append({
+                "product_id": row["inventory__product_id"],
+                "product": row["inventory__product__name"],
+                "total_deviation_qty": row["total_deviation_qty"] or 0,
+                "deficit_qty": row["deficit_qty"] or 0,
+                "surplus_qty": row["surplus_qty"] or 0,
+                "affected_shops": row["affected_shops"] or 0,
+                "last_calculated_at": row["last_calculated_at"],
+            })
+
+        serializer = ProblemProductSerializer(items, many=True)
         return Response(serializer.data)
