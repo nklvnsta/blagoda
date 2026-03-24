@@ -77,7 +77,7 @@
 
   /* ── Layout ─────────────────────────────────────────────────────────────── */
   --layout-max-width: 1440px;
-  --layout-side-padding: 60px;
+  --layout-side-padding: 15px;
   --layout-content-padding: 90px;
   --header-height: 72px;
   --tab-bar-height: 51px;

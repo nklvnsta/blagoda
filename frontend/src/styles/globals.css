@@ -1,5 +1,31 @@
 @import './tokens.css';
 
+/* ── Fonts ─────────────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Museo Cyrl';
+  src: url('../fonts/MuseoSansCyrl500.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Museo Cyrl';
+  src: url('../fonts/MuseoSansCyrl700.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Museo Cyrl';
+  src: url('../fonts/MuseoSansCyrl900.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ==========================================================================
    Global Styles — «Оптимизация товарных потоков» (Благода)
    Этот файл содержит только глобальные стили для основных элементов страницы.
@@ -104,6 +130,20 @@ p {
   display: flex;
   flex-direction: column;
 }
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 0;
+}
+
+.heading {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-primary);
+}
+
 
 /* ── Scrollbar (webkit) ───────────────────────────────────────────────────── */
 
