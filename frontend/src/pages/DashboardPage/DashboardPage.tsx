@@ -7,6 +7,9 @@ import type {
 } from '../../api/types';
 import { StatCard } from '../../components/ui/StatCard';
 import { SalesChart } from '../../components/ui/SalesChart';
+import { CriticalDeviationsCard } from '../../components/ui/CriticalDeviationsCard';
+import { ProblemProductsCard } from '../../components/ui/ProblemProductsCard';
+import { Divider } from '../../components/ui/Divider';
 import styles from './DashboardPage.module.css';
 import { ExclamationMark } from '../../components/icons/ExclamationMark';
 
@@ -70,6 +73,15 @@ export function DashboardPage() {
       </div>
 
       <SalesChart data={chart.data} loading={chart.loading} />
+
+      <div className={styles.deviationsBand}>
+        <div className={styles.criticalWrap}>
+          <CriticalDeviationsCard />
+        </div>
+        <Divider direction="vertical" className={styles.sepVertical} />
+        <Divider direction="horizontal" className={styles.sepHorizontal} />
+        <ProblemProductsCard />
+      </div>
     </div>
   );
 }

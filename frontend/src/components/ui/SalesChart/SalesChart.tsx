@@ -61,7 +61,7 @@ export function SalesChart({ data, loading }: SalesChartProps) {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={200}>
         <AreaChart data={points} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id="gradActual" x1="0" y1="0" x2="0" y2="1">
@@ -97,11 +97,13 @@ export function SalesChart({ data, loading }: SalesChartProps) {
               border: '1px solid #e5e5e5',
               fontSize: '13px',
             }}
-            formatter={(value: number, name: string) => [
-              `${value.toFixed(1)} тыс. руб.`,
-              name === 'actual' ? 'Факт' : 'Прогноз',
-            ]}
-            labelFormatter={(label: string) => `Неделя с ${label}`}
+            formatter={(value, name) => {
+              const n = typeof value === 'number' ? value : Number(value);
+              const safe = Number.isFinite(n) ? n : 0;
+              const label = name === 'actual' ? 'Факт' : 'Прогноз';
+              return [`${safe.toFixed(1)} тыс. руб.`, label];
+            }}
+            labelFormatter={(label) => `Неделя с ${String(label)}`}
           />
 
           <Area

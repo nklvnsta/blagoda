@@ -13,6 +13,26 @@
   margin-right: 16px;
 }
 
+.deviationsBand {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-7);
+  width: 100%;
+}
+
+.criticalWrap {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.sepVertical {
+  display: block;
+}
+
+.sepHorizontal {
+  display: none;
+}
+
 .error {
   background: #fef2f2;
   border: 1px solid var(--color-status-critical);
@@ -20,6 +40,21 @@
   padding: 12px 16px;
   color: var(--color-status-critical);
   font-size: var(--font-size-xs);
+}
+
+@media (max-width: 700px) {
+  .deviationsBand {
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .sepVertical {
+    display: none;
+  }
+
+  .sepHorizontal {
+    display: block;
+  }
 }
 
 @media (max-width: 1100px) {

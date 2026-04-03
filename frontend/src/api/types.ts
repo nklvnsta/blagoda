@@ -41,3 +41,23 @@ export interface SalesChartResponse {
   points: ChartPoint[];
   filters: Record<string, string | null>;
 }
+
+/** Ответ GET /dashboard/critical-stock/ — массив записей */
+export interface CriticalStockItem {
+  product: string;
+  shop: string;
+  deviation_qty: number;
+  deviation_type: 'deficit' | 'surplus';
+  calculated_at: string;
+}
+
+/** Элемент GET /dashboard/problem-products/ */
+export interface ProblemProductItem {
+  product_id: string;
+  product: string;
+  total_deviation_qty: number;
+  deficit_qty: number;
+  surplus_qty: number;
+  affected_shops: number;
+  last_calculated_at: string;
+}
