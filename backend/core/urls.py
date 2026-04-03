@@ -5,6 +5,8 @@ from core.views import (
     DeficitView,
     SurplusView,
     RevenueView,
+    SalesFiltersView,
+    SalesSummaryView,
     ForecastAccuracyView,
     SalesChartView,
     CriticalStockView,
@@ -13,6 +15,8 @@ from core.views import (
 
 urlpatterns = [
     path("ping/", ping),
+    path("sales/filters/", SalesFiltersView.as_view()),
+    path("sales/summary/", SalesSummaryView.as_view()),
     path("dashboard/deficit/", DeficitView.as_view()),
     path("dashboard/surplus/", SurplusView.as_view()),
     path("dashboard/revenue/", RevenueView.as_view()),
