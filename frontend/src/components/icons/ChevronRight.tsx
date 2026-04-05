@@ -1,10 +1,10 @@
 import type { IconProps } from './types';
 
-export function ChevronRight({ size = 20, color = 'currentColor', ...props }: IconProps) {
+export function ChevronRight({ size = 24, color = 'currentColor', ...props }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden {...props}>
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden {...props}>
       <path
-        d="M9 6l6 6-6 6"
+        d="M7.5 5L12.5 10L7.5 15"
         stroke={color}
         strokeWidth="2"
         strokeLinecap="round"

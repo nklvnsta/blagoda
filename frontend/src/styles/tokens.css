@@ -57,16 +57,16 @@
   --letter-spacing-xs: -0.28px;       /* 14px labels */
 
   /* ── Spacing ────────────────────────────────────────────────────────────── */
-  --space-1: 6px;
-  --space-2: 9px;
-  --space-3: 10px;
-  --space-4: 11px;
-  --space-5: 12px;
-  --space-6: 15px;
-  --space-7: 16px;
-  --space-8: 17px;
-  --space-9: 18px;
-  --space-10: 22px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
 
   /* ── Border Radius ──────────────────────────────────────────────────────── */
   --radius-sm: 5px;                   /* Filters, stat-cards, buttons, chips */

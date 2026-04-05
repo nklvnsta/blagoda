@@ -61,3 +61,42 @@ export interface ProblemProductItem {
   affected_shops: number;
   last_calculated_at: string;
 }
+
+export interface Category {
+  id: string;
+  name: string;
+  children?: Category[];
+}
+
+export interface FiltersResponse {
+  shops: {
+    id: string;
+    name: string;
+  }[];
+  categories: Category[];
+  periods: {
+    code: string;
+    name: string;
+  }[]
+}
+
+export interface SalesData {
+  revenue: string;
+  sold_qty: number;
+  avg_ticket: string;
+  avg_daily_revenue: string;
+  currency: string;
+  quantity_unit: string;
+  receipt_count: number;
+  period_code: string;
+  period_label: string;
+  period_start: string;
+  period_end: string;
+  filters: {
+    shop?: string;
+    category?: string;
+    period?: string;
+    date_from?: string;
+    date_to?: string;
+  };
+}

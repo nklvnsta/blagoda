@@ -5,6 +5,7 @@ from .batch import Batch, BatchShipment
 from .inventory import Inventory, StockDeviation, InventorySnapshot
 from .sales import Sales
 from .forecast import ForecastEntry
+from .receipt import Receipt
 
 __all__ = [
     "Category",
@@ -17,4 +18,5 @@ __all__ = [
     "InventorySnapshot",
     "Sales",
     "ForecastEntry",
+    "Receipt",
 ]

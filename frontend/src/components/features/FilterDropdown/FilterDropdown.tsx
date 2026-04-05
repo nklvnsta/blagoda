@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./FilterDropdown.module.css";
 import { ChevronDown } from "../../icons";
+import { Divider } from "../../ui/Divider";
 
 type Option = {
   label: string;
@@ -53,12 +54,13 @@ export function FilterDropdown({
     <div className={styles.wrapper} ref={ref}>
       <div className={styles.control} onClick={() => setOpen((o) => !o)}>
         {label && <span className={styles.label}>{label}</span>}
-
+        
+        <Divider direction="vertical" />
         <div className={styles.valueBlock}>
+
           <span className={styles.value}>
             {selectedOption?.label}
           </span>
-
           <span className={`${styles.icon} ${open ? styles.open : ""}`}>
             <ChevronDown />
           </span>

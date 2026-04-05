@@ -1,13 +1,13 @@
 from decimal import Decimal, ROUND_HALF_UP
 
-from django.db.models import DecimalField, F, Sum
+from django.db.models import Count, DecimalField, F, Sum
 from django.db.models.functions import Coalesce
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import Sales
+from core.models import Receipt, Sales
 from core.views.sales_common import resolve_category_ids, resolve_period, validate_shop
 
 
@@ -24,7 +24,6 @@ class SalesSummaryResponseSerializer(serializers.Serializer):
     period_start = serializers.DateField()
     period_end = serializers.DateField()
     filters = serializers.DictField()
-    warnings = serializers.ListField(child=serializers.CharField())
 
 
 def quantize_money(value: Decimal) -> Decimal:
@@ -39,7 +38,7 @@ class SalesSummaryView(APIView):
       - выручка
       - продано, шт.
       - средняя выручка в день
-      - средний чек (null, пока в модели продаж нет данных о чеках)
+      - средний чек
     """
 
     def get(self, request: Request) -> Response:
@@ -76,19 +75,46 @@ class SalesSummaryView(APIView):
             sold_qty=Coalesce(Sum("quantity"), 0),
         )
 
+        receipt_queryset = Receipt.objects.filter(
+            created_at__date__gte=period.date_from,
+            created_at__date__lte=period.date_to,
+        )
+        if shop_id:
+            receipt_queryset = receipt_queryset.filter(shop_id=shop_id)
+        if category_ids:
+            receipt_queryset = receipt_queryset.filter(
+                sales__product__category_id__in=category_ids,
+            )
+
+        receipt_totals = receipt_queryset.aggregate(
+            receipt_count=Coalesce(Count("id", distinct=True), 0),
+            receipt_amount=Coalesce(
+                Sum("total_amount", output_field=DecimalField(max_digits=14, decimal_places=2)),
+                Decimal("0.00"),
+                output_field=DecimalField(max_digits=14, decimal_places=2),
+            ),
+        )
+
         revenue = quantize_money(totals["revenue"])
         sold_qty = totals["sold_qty"] or 0
         days_in_period = (period.date_to - period.date_from).days + 1
         avg_daily_revenue = quantize_money(revenue / Decimal(days_in_period))
 
+        receipt_count = receipt_totals["receipt_count"] or 0
+        avg_ticket = (
+            quantize_money(receipt_totals["receipt_amount"] / Decimal(receipt_count))
+            if receipt_count
+            else None
+        )
+
         data = {
             "revenue": revenue,
             "sold_qty": sold_qty,
-            "avg_ticket": None,
+            "avg_ticket": avg_ticket,
             "avg_daily_revenue": avg_daily_revenue,
             "currency": "руб.",
             "quantity_unit": "шт.",
-            "receipt_count": None,
+            "receipt_count": receipt_count,
             "period_code": period.code,
             "period_label": period.label,
             "period_start": period.date_from,
@@ -100,9 +126,6 @@ class SalesSummaryView(APIView):
                 "date_from": period.date_from.isoformat(),
                 "date_to": period.date_to.isoformat(),
             },
-            "warnings": [
-                "Средний чек пока недоступен: в модели Sales нет данных о чеках."
-            ],
         }
 
         serializer = SalesSummaryResponseSerializer(data)

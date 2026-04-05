@@ -16,7 +16,7 @@
 .deviationsBand {
   display: flex;
   align-items: stretch;
-  gap: var(--space-7);
+  gap: var(--space-5);
   width: 100%;
 }
 
@@ -45,7 +45,7 @@
 @media (max-width: 700px) {
   .deviationsBand {
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 
   .sepVertical {

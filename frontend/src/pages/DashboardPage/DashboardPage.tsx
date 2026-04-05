@@ -5,10 +5,10 @@ import type {
   ForecastAccuracyResponse,
   SalesChartResponse,
 } from '../../api/types';
-import { StatCard } from '../../components/ui/StatCard';
-import { SalesChart } from '../../components/ui/SalesChart';
-import { CriticalDeviationsCard } from '../../components/ui/CriticalDeviationsCard';
-import { ProblemProductsCard } from '../../components/ui/ProblemProductsCard';
+import { StatCard } from '../../components/features/StatCard';
+import { SalesChart } from '../../components/features/SalesChart';
+import { CriticalDeviationsCard } from '../../components/features/CriticalDeviationsCard';
+import { ProblemProductsCard } from '../../components/features/ProblemProductsCard';
 import { Divider } from '../../components/ui/Divider';
 import styles from './DashboardPage.module.css';
 import { ExclamationMark } from '../../components/icons/ExclamationMark';

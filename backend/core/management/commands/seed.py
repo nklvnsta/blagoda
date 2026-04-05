@@ -21,7 +21,7 @@ from django.db import models, transaction
 
 from core.models import (
     Category, Shop, Product, Batch, BatchShipment,
-    Sales, Inventory, StockDeviation, InventorySnapshot,
+    Sales, Receipt, Inventory, StockDeviation, InventorySnapshot,
     ForecastEntry,
 )
 
@@ -135,6 +135,7 @@ class Command(BaseCommand):
             InventorySnapshot.objects.all().delete()
             Inventory.objects.all().delete()
             Sales.objects.all().delete()
+            Receipt.objects.all().delete()
             BatchShipment.objects.all().delete()
             Batch.objects.all().delete()
             Product.objects.all().delete()
@@ -147,7 +148,7 @@ class Command(BaseCommand):
         products   = self._seed_products(categories)
         batches    = self._seed_batches(products)
         self._seed_shipments(batches, shops)
-        self._seed_sales(products, shops)
+        sales_and_receipts = self._seed_sales(products, shops)
         inventories = self._seed_inventory(products, shops)
         self._seed_deviations(inventories)
         self._seed_snapshots(products, shops)
@@ -156,8 +157,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"\n✓ Готово: {len(categories)} категорий, {len(shops)} магазинов, "
             f"{len(products)} товаров, {Batch.objects.count()} партий, "
-            f"{Sales.objects.count()} продаж, {len(inventories)} остатков, "
-            f"{ForecastEntry.objects.count()} прогнозов"
+            f"{Receipt.objects.count()} чеков, {Sales.objects.count()} продаж, "
+            f"{len(inventories)} остатков, {ForecastEntry.objects.count()} прогнозов"
         ))
 
     # ── Категории ────────────────────────────────────────────────────────────
@@ -304,15 +305,16 @@ class Command(BaseCommand):
     # ── Продажи ──────────────────────────────────────────────────────────────
 
     def _seed_sales(self, products, shops):
-        self.stdout.write("Создаём продажи (180 дней)...")
+        self.stdout.write("Создаём продажи (180 дней) и чеки...")
         today = date.today()
-        rows  = []
-
+        sales_data = []  # (product, shop, quantity, date, price_at_sale)
+        
         avg_sales_map = {
             p.sku: PRODUCTS[i][5]
             for i, p in enumerate(products)
         }
 
+        # Первый проход: собираем данные по продажам
         for product in products:
             base = avg_sales_map.get(product.sku, 10)
 
@@ -330,15 +332,82 @@ class Command(BaseCommand):
                     qty  = max(0, int(random.gauss(mean, mean * 0.25)))
 
                     if qty > 0:
-                        rows.append(Sales(
-                            product  = product,
-                            shop     = shop,
-                            quantity = qty,
-                            date     = d,
-                        ))
+                        price_at_sale = product.price
+                        sales_data.append((product, shop, qty, d, price_at_sale))
 
-        Sales.objects.bulk_create(rows, batch_size=500)
-        self.stdout.write(f"  → {len(rows)} записей продаж")
+        # Группируем продажи по дате и магазину для создания чеков
+        from collections import defaultdict
+        receipts_by_shop_date = defaultdict(list)
+        
+        for product, shop, qty, d, price_at_sale in sales_data:
+            receipts_by_shop_date[(shop.id, d)].append({
+                'product': product,
+                'quantity': qty,
+                'price_at_sale': price_at_sale,
+                'shop': shop,
+                'date': d,
+            })
+
+        # Создаём чеки - по одному на день на магазин (можно разделить)
+        receipts_list = []
+        sales_list = []
+        receipt_map = {}  # Ключ: (shop_id, date) -> Receipt ID
+        
+        for (shop_id, sale_date), sales_in_group in receipts_by_shop_date.items():
+            # Разделяем на несколько чеков в зависимости от количества товаров
+            items_per_receipt = max(1, random.randint(3, 8))
+            current_receipt_items = []
+            
+            for sale_item in sales_in_group:
+                current_receipt_items.append(sale_item)
+                
+                if len(current_receipt_items) >= items_per_receipt or sale_item == sales_in_group[-1]:
+                    # Создаём чек для накопленных товаров
+                    total_amount = sum(
+                        float(item['price_at_sale'] * item['quantity'])
+                        for item in current_receipt_items
+                    )
+                    total_qty = sum(item['quantity'] for item in current_receipt_items)
+                    
+                    receipt = Receipt(
+                        shop_id=shop_id,
+                        total_amount=total_amount,
+                        item_count=len(current_receipt_items),
+                        total_qty=total_qty,
+                    )
+                    receipts_list.append((receipt, current_receipt_items))
+                    current_receipt_items = []
+
+        # Создаём все чеки
+        receipt_objects = [r[0] for r in receipts_list]
+        Receipt.objects.bulk_create(receipt_objects, batch_size=200)
+        
+        # Получаем созданные чеки с ID и создаём продажи
+        created_receipts = Receipt.objects.filter(shop__in=shops).order_by('-created_at')[:len(receipt_objects)]
+        receipt_list = list(created_receipts)
+        
+        # Создаём продажи со связью на чеки
+        sales_list = []
+        receipt_idx = 0
+        for receipt in receipt_list:
+            if receipt_idx < len(receipts_list):
+                _, sales_items = receipts_list[receipt_idx]
+                for item in sales_items:
+                    sales_list.append(Sales(
+                        product=item['product'],
+                        shop=item['shop'],
+                        quantity=item['quantity'],
+                        date=item['date'],
+                        price_at_sale=item['price_at_sale'],
+                        receipt=receipt,
+                    ))
+                receipt_idx += 1
+
+        Sales.objects.bulk_create(sales_list, batch_size=500)
+        
+        self.stdout.write(f"  → {len(receipt_list)} чеков, {len(sales_list)} записей продаж")
+        
+        return (sales_list, receipt_list)
 
     # ── Остатки (Inventory) ──────────────────────────────────────────────────
 
