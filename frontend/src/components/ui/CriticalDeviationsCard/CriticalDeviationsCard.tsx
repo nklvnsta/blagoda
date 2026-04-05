@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useApi } from '../../../api';
 import type { CriticalStockItem } from '../../../api/types';
-import { TargetIcon, ChevronRightIcon } from '../../icons';
+import { TargetIcon, ChevronRight } from '../../icons';
 import styles from './CriticalDeviationsCard.module.css';
 
 function pickTopByType(items: CriticalStockItem[], type: CriticalStockItem['deviation_type']) {
@@ -38,7 +38,7 @@ function DeviationRow({ variant, item }: RowProps) {
         </div>
         <button type="button" className={styles.action}>
           Перейти к списку
-          <ChevronRightIcon size={20} color="var(--color-icon-default)" />
+          <ChevronRight size={20} color="var(--color-icon-default)" />
         </button>
       </div>
     </div>

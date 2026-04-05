@@ -1,6 +1,6 @@
 import type { IconProps } from './types';
 
-export function ChevronRightIcon({ size = 20, color = 'currentColor', ...props }: IconProps) {
+export function ChevronRight({ size = 20, color = 'currentColor', ...props }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden {...props}>
       <path
