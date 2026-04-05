@@ -2,7 +2,7 @@ import styles from "./FilterComponent.module.css";
 
 import { ChevronRight } from "../../icons";
 import { FilterDropdown } from "../FilterDropdown";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useApi } from "../../../api";
 import { Button } from "../../ui/Button";
 import type { FiltersResponse } from "../../../api/types";
@@ -31,9 +31,17 @@ export function FiltersComponent() {
         ]
     : [];
     const periodOptions = filters.data
-        ? filters.data.periods.map((p) => ({ label: p.name, value: p.code }))
+        ? filters.data.periods.map((p) => ({ label: p.label, value: p.code }))
         : [];
     
+    useEffect(
+        () => {
+            if (periodOptions.length > 0 && !selectedPeriod) {
+                setSelectedPeriod(periodOptions[0].value);
+            }
+        },
+        [periodOptions, selectedPeriod]
+    );
 
     return (
         <div className={styles.filters}>
@@ -53,6 +61,7 @@ export function FiltersComponent() {
                 <FilterDropdown
                     label="Период"
                     options={periodOptions}
+                    value={selectedPeriod}
                     onChange={setSelectedPeriod}
                 />
             </div>

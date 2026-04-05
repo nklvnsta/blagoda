@@ -76,7 +76,7 @@ export interface FiltersResponse {
   categories: Category[];
   periods: {
     code: string;
-    name: string;
+    label: string;
   }[]
 }
 

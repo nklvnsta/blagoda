@@ -1,1 +1,1 @@
-import { FiltersComponent } from "./FiltersComponent";
+export { FiltersComponent } from "./FiltersComponent";
