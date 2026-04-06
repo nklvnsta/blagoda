@@ -2,13 +2,23 @@ import styles from "./FilterComponent.module.css";
 
 import { ChevronRight } from "../../icons";
 import { FilterDropdown } from "../FilterDropdown";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useApi } from "../../../api";
 import { Button } from "../../ui/Button";
 import type { FiltersResponse } from "../../../api/types";
 
+export interface FilterValues {
+    shopId?: string;
+    categoryId?: string;
+    periodCode: string | undefined;
+}
 
-export function FiltersComponent() {
+interface FiltersComponentProps {
+    onApply?: (filters: FilterValues) => void;  
+}
+
+
+export function FiltersComponent({ onApply, }: FiltersComponentProps) {
     const ALL_SHOPS_VALUE = "all";
     const ALL_CATEGORIES_VALUE = "all";
     
@@ -42,6 +52,16 @@ export function FiltersComponent() {
         },
         [periodOptions, selectedPeriod]
     );
+    
+    const handleApply = () => {
+        if (onApply) {
+            onApply({
+                shopId: selectedShop !== ALL_SHOPS_VALUE ? selectedShop : undefined,
+                categoryId: selectedCategory !== ALL_CATEGORIES_VALUE ? selectedCategory : undefined,
+                periodCode: selectedPeriod!,
+            });
+        }
+    }
 
     return (
         <div className={styles.filters}>
@@ -70,7 +90,7 @@ export function FiltersComponent() {
                 <Button type='secondary' onClick={() => console.log("Filters applied!")}>
                     Сбросить
                 </Button>
-                <Button onClick={() => console.log("Filters applied!")} icon={<ChevronRight />}>
+                <Button onClick={handleApply} icon={<ChevronRight />}>
                     Применить
                 </Button>
             </div>

@@ -9,6 +9,7 @@ import { StatCard } from '../../components/features/StatCard';
 import { SalesChart } from '../../components/features/SalesChart';
 import { CriticalDeviationsCard } from '../../components/features/CriticalDeviationsCard';
 import { ProblemProductsCard } from '../../components/features/ProblemProductsCard';
+import { KPICardsRow } from '../../components/features/KPICardsRow';
 import { Divider } from '../../components/ui/Divider';
 import styles from './DashboardPage.module.css';
 import { ExclamationMark } from '../../components/icons/ExclamationMark';
@@ -32,7 +33,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className={styles.cards}>
+      <KPICardsRow>
         <StatCard
           icon={<ExclamationMark color="var(--color-status-critical)" />}
           title="Дефицит товаров"
@@ -41,7 +42,7 @@ export function DashboardPage() {
           unit={deficit.data?.current_week.unit}
           changePct={deficit.data?.change_pct}
           footer_additional={'к прошлой неделе'}
-          loading={deficit.loading}
+          loading={revenue.loading || forecast.loading || deficit.loading || surplus.loading}
         />
         <StatCard
           icon={<ExclamationMark color="var(--color-status-warning)" />}
@@ -51,7 +52,7 @@ export function DashboardPage() {
           unit={surplus.data?.current_week.unit}
           changePct={surplus.data?.change_pct}
           footer_additional={'к прошлой неделе'}
-          loading={surplus.loading}
+          loading={revenue.loading || forecast.loading || deficit.loading || surplus.loading}
         />
 
         <StatCard
@@ -59,7 +60,7 @@ export function DashboardPage() {
           title="Точность прогноза"
           value={forecast.data ? String(forecast.data.accuracy_pct) : '—'}
           unit="%"
-          loading={forecast.loading}
+          loading={revenue.loading || forecast.loading || deficit.loading || surplus.loading}
         />
 
         <StatCard
@@ -68,9 +69,9 @@ export function DashboardPage() {
           title_additional={'за неделю'}
           value={revenue.data ? String(revenue.data.revenue) : '—'}
           unit={revenue.data?.unit}
-          loading={revenue.loading}
+          loading={revenue.loading || forecast.loading || deficit.loading || surplus.loading}
         />
-      </div>
+      </KPICardsRow>
 
       <SalesChart data={chart.data} loading={chart.loading} />
 
