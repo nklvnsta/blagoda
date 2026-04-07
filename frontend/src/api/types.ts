@@ -42,6 +42,21 @@ export interface SalesChartResponse {
   filters: Record<string, string | null>;
 }
 
+export interface SalesRevenueChartPoint {
+  date: string;
+  revenue: string;
+  avg_ticket: string | null;
+}
+
+export interface SalesRevenueChartResponse {
+  unit: string;
+  average_unit: string;
+  period_start: string;
+  period_end: string;
+  points: SalesRevenueChartPoint[];
+  filters: Record<string, string | null>;
+}
+
 /** Ответ GET /dashboard/critical-stock/ — массив записей */
 export interface CriticalStockItem {
   product: string;
@@ -99,4 +114,24 @@ export interface SalesData {
     date_from?: string;
     date_to?: string;
   };
+}
+
+export interface ShopSalesRow {
+  shop_id: string;
+  shop_name: string;
+  revenue: string;
+  sold_qty: number;
+  receipt_count: number;
+}
+
+export interface SalesByShopsResponse {
+  currency: string;
+  quantity_unit: string;
+  rows: ShopSalesRow[];
+  total: ShopSalesRow;
+  period_start: string;
+  period_end: string;
+  period_code: string;
+  period_label: string;
+  filters: Record<string, string | null>;
 }

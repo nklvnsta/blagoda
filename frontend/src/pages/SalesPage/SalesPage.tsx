@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FiltersComponent } from "../../components/features/FiltersComponent";
 import type { FilterValues } from "../../components/features/FiltersComponent";
 import { StatCard } from "../../components/features/StatCard";
-import styles from "./SalesPage.module.css";
 import { useApi } from "../../api";
-import type { SalesData } from "../../api/types";
-import { Divider } from "../../components/ui/Divider";
+import type { SalesData, SalesRevenueChartResponse, SalesByShopsResponse } from "../../api/types";
 import { KPICardsRow } from "../../components/features/KPICardsRow";
+import { SalesRevenueChart } from "../../components/features/SalesRevenueChart";
+import { SalesByShopsTable } from "../../components/features/SalesByShopsTable";
 
 export function SalesPage() {
 
@@ -16,17 +16,26 @@ export function SalesPage() {
     periodCode: undefined,
   });
 
-  const salesData = useApi<SalesData>('/sales/summary', 
-    {  
-      shop: filters.shopId,
-      category: filters.categoryId,
-      period: filters.periodCode,
-    }
-  );
-  
+  const salesData = useApi<SalesData>('/sales/summary', {
+    shop: filters.shopId,
+    category: filters.categoryId,
+    period: filters.periodCode,
+  });
+
+  const salesChart = useApi<SalesRevenueChartResponse>('/sales/sales-chart/', {
+    shop: filters.shopId,
+    category: filters.categoryId,
+    period: filters.periodCode,
+  });
+
+  const shopsTable = useApi<SalesByShopsResponse>('/sales/by-shops/', {
+    category: filters.categoryId,
+    period: filters.periodCode,
+  });
+
   return (
     <div className="page">
-      <h1 className="heading">Продажи</h1>
+      <h2 className="heading">Продажи</h2>
       <FiltersComponent onApply={setFilters} />
       <KPICardsRow>
         <StatCard
@@ -55,6 +64,9 @@ export function SalesPage() {
         />
       </KPICardsRow>
 
+      <SalesRevenueChart data={salesChart.data} loading={salesChart.loading} />
+
+      <SalesByShopsTable data={shopsTable.data} loading={shopsTable.loading} />
     </div>
   );
 }

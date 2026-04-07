@@ -5,6 +5,8 @@ from .sales_filters import SalesFiltersView
 from .sales_summary import SalesSummaryView
 from .forecast import ForecastAccuracyView
 from .sales_chart import SalesChartView
+from .sales_revenue_chart import SalesRevenueChartView
+from .sales_by_shops import SalesByShopsView
 
 __all__ = [
     "ping",
@@ -15,6 +17,8 @@ __all__ = [
     "SalesSummaryView",
     "ForecastAccuracyView",
     "SalesChartView",
+    "SalesRevenueChartView",
+    "SalesByShopsView",
     "CriticalStockView",
     "ProblemProductsView",
 ]

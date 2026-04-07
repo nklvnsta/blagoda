@@ -4,5 +4,7 @@ export { SettingsIcon } from './SettingsIcon';
 export { ExclamationMark } from './ExclamationMark';
 export { TargetIcon } from './TargetIcon';
 export { ChevronRight } from './ChevronRight';
-export { ChevronDown } from './ChevronDown'
+export { ChevronDown } from './ChevronDown';
+export { ChevronUp } from './ChevronUp';
+export { SearchIcon } from './SearchIcon';
 export type { IconProps } from './types';

@@ -157,3 +157,4 @@ class SalesChartView(APIView):
             .order_by("week")
         )
         return {row["week"]: row["total"] for row in rows}
+

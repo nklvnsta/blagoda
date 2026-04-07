@@ -25,7 +25,7 @@ export function DashboardPage() {
 
   return (
     <div className="page">
-      <h1 className="heading">Краткое состояние сети</h1>
+      <h2 className="heading">Краткое состояние сети</h2>
 
       {anyError && (
         <div className={styles.error}>

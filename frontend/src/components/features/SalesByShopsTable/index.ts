@@ -1,0 +1,1 @@
+export { SalesByShopsTable } from './SalesByShopsTable';
