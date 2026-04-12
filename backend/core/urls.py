@@ -11,6 +11,7 @@ from core.views import (
     SalesChartView,
     SalesRevenueChartView,
     SalesByShopsView,
+    SalesByProductsView,
     CriticalStockView,
     ProblemProductsView,
 )
@@ -20,6 +21,7 @@ urlpatterns = [
     path("sales/filters/", SalesFiltersView.as_view()),
     path("sales/summary/", SalesSummaryView.as_view()),
     path("sales/by-shops/", SalesByShopsView.as_view()),
+    path("sales/by-products/", SalesByProductsView.as_view()),
     path("dashboard/deficit/", DeficitView.as_view()),
     path("dashboard/surplus/", SurplusView.as_view()),
     path("dashboard/revenue/", RevenueView.as_view()),

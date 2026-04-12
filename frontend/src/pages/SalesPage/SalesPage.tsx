@@ -3,10 +3,17 @@ import { FiltersComponent } from "../../components/features/FiltersComponent";
 import type { FilterValues } from "../../components/features/FiltersComponent";
 import { StatCard } from "../../components/features/StatCard";
 import { useApi } from "../../api";
-import type { SalesData, SalesRevenueChartResponse, SalesByShopsResponse } from "../../api/types";
+import type {
+  SalesData,
+  SalesRevenueChartResponse,
+  SalesByShopsResponse,
+  SalesByProductsResponse,
+} from "../../api/types";
 import { KPICardsRow } from "../../components/features/KPICardsRow";
 import { SalesRevenueChart } from "../../components/features/SalesRevenueChart";
 import { SalesByShopsTable } from "../../components/features/SalesByShopsTable";
+import { SalesByProductsTable } from "../../components/features/SalesByProductsTable";
+import styles from "./SalesPage.module.css";
 
 export function SalesPage() {
 
@@ -29,6 +36,12 @@ export function SalesPage() {
   });
 
   const shopsTable = useApi<SalesByShopsResponse>('/sales/by-shops/', {
+    category: filters.categoryId,
+    period: filters.periodCode,
+  });
+
+  const productsTable = useApi<SalesByProductsResponse>('/sales/by-products/', {
+    shop: filters.shopId,
     category: filters.categoryId,
     period: filters.periodCode,
   });
@@ -66,7 +79,14 @@ export function SalesPage() {
 
       <SalesRevenueChart data={salesChart.data} loading={salesChart.loading} />
 
-      <SalesByShopsTable data={shopsTable.data} loading={shopsTable.loading} />
+      <div className={styles.tablesRow}>
+        <div className={styles.tableSlot}>
+          <SalesByShopsTable data={shopsTable.data} loading={shopsTable.loading} />
+        </div>
+        <div className={styles.tableSlot}>
+          <SalesByProductsTable data={productsTable.data} loading={productsTable.loading} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -6,7 +6,7 @@
 
 .label {
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-secondary);
 }
 
@@ -40,8 +40,8 @@
 }
 
 .input:focus {
-  border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand-primary) 18%, transparent);
 }
 
 .input::placeholder {

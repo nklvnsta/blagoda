@@ -14,7 +14,7 @@ from core.views.sales_common import resolve_category_ids, resolve_period, valida
 class SalesSummaryResponseSerializer(serializers.Serializer):
     revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
     sold_qty = serializers.IntegerField()
-    avg_ticket = serializers.DecimalField(max_digits=14, decimal_places=2, allow_null=True)
+    avg_ticket = serializers.DecimalField(max_digits=14, decimal_places=2)
     avg_daily_revenue = serializers.DecimalField(max_digits=14, decimal_places=2)
     currency = serializers.CharField()
     quantity_unit = serializers.CharField()
@@ -101,11 +101,12 @@ class SalesSummaryView(APIView):
         avg_daily_revenue = quantize_money(revenue / Decimal(days_in_period))
 
         receipt_count = receipt_totals["receipt_count"] or 0
-        avg_ticket = (
-            quantize_money(receipt_totals["receipt_amount"] / Decimal(receipt_count))
-            if receipt_count
-            else None
-        )
+        if receipt_count:
+            avg_ticket = quantize_money(
+                receipt_totals["receipt_amount"] / Decimal(receipt_count),
+            )
+        else:
+            avg_ticket = quantize_money(Decimal("0.00"))
 
         data = {
             "revenue": revenue,

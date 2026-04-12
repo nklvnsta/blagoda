@@ -135,3 +135,21 @@ export interface SalesByShopsResponse {
   period_label: string;
   filters: Record<string, string | null>;
 }
+
+export interface ProductSalesRow {
+  product_id: string;
+  product_name: string;
+  category_name: string;
+  sold_qty: number;
+}
+
+export interface SalesByProductsResponse {
+  quantity_unit: string;
+  rows: ProductSalesRow[];
+  total: ProductSalesRow;
+  period_start: string;
+  period_end: string;
+  period_code: string;
+  period_label: string;
+  filters: Record<string, string | null>;
+}

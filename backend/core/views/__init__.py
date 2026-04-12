@@ -7,6 +7,7 @@ from .forecast import ForecastAccuracyView
 from .sales_chart import SalesChartView
 from .sales_revenue_chart import SalesRevenueChartView
 from .sales_by_shops import SalesByShopsView
+from .sales_by_products import SalesByProductsView
 
 __all__ = [
     "ping",
@@ -19,6 +20,7 @@ __all__ = [
     "SalesChartView",
     "SalesRevenueChartView",
     "SalesByShopsView",
+    "SalesByProductsView",
     "CriticalStockView",
     "ProblemProductsView",
 ]

@@ -1,0 +1,1 @@
+export { SalesByProductsTable } from './SalesByProductsTable';
