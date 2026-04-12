@@ -10,7 +10,7 @@ interface NavigationItem {
 const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'home', label: 'Главная', to: '/' },
   { id: 'sales', label: 'Продажи', to: '/sales' },
-  { id: 'forecast', label: 'Прогноз спроса' },
+  { id: 'forecast', label: 'Прогноз спроса', to: '/forecast' },
   { id: 'inventory', label: 'Запасы' },
   { id: 'supplies', label: 'Поставки' },
   { id: 'order-picking', label: 'Сбор заказа' },

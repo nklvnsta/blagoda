@@ -1,0 +1,62 @@
+.wrapper {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-black);
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.searchInput {
+    max-width: 320px;
+}
+
+.deviationPositive {
+    color: var(--color-status-positive);
+}
+
+.deviationNegative {
+    color: var(--color-status-negative);
+}
+
+.skeleton {
+    height: 400px;
+    background: var(--color-bg-surface-muted);
+    border-radius: var(--radius-md);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-sm);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}

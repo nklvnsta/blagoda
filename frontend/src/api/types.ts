@@ -143,6 +143,52 @@ export interface ProductSalesRow {
   sold_qty: number;
 }
 
+// ── Forecast (Прогноз спроса) ────────────────────────────────────────────
+
+export interface DemandChartPoint {
+  week_start: string;
+  actual: number;
+  forecast: number | null;
+}
+
+export interface ForecastDemandChartResponse {
+  unit: string;
+  period_start: string;
+  period_end: string;
+  points: DemandChartPoint[];
+  filters: Record<string, string | null>;
+}
+
+export interface ForecastSummaryResponse {
+  expected_sales: number;
+  expected_sales_unit: string;
+  accuracy_pct: number;
+  total_forecasts: number;
+  period_start: string;
+  period_end: string;
+  period_code: string;
+  period_label: string;
+  filters: Record<string, string | null>;
+}
+
+export interface ForecastProductRow {
+  product_id: string;
+  product_name: string;
+  forecast_qty: number;
+  previous_qty: number;
+  deviation_qty: number;
+}
+
+export interface ForecastByProductsResponse {
+  quantity_unit: string;
+  rows: ForecastProductRow[];
+  period_start: string;
+  period_end: string;
+  period_code: string;
+  period_label: string;
+  filters: Record<string, string | null>;
+}
+
 export interface SalesByProductsResponse {
   quantity_unit: string;
   rows: ProductSalesRow[];
