@@ -17,6 +17,11 @@ from core.views import (
     SalesByProductsView,
     CriticalStockView,
     ProblemProductsView,
+    SuppliesFiltersView,
+    SuppliesSummaryView,
+    SuppliesScheduledView,
+    SuppliesInTransitView,
+    SuppliesTableView,
 )
 
 urlpatterns = [
@@ -36,4 +41,9 @@ urlpatterns = [
     path("sales/sales-chart/", SalesRevenueChartView.as_view()),
     path("dashboard/critical-stock/", CriticalStockView.as_view()),
     path("dashboard/problem-products/", ProblemProductsView.as_view()),
+    path("supplies/filters/", SuppliesFiltersView.as_view()),
+    path("supplies/summary/", SuppliesSummaryView.as_view()),
+    path("supplies/scheduled/", SuppliesScheduledView.as_view()),
+    path("supplies/in-transit/", SuppliesInTransitView.as_view()),
+    path("supplies/", SuppliesTableView.as_view()),
 ]

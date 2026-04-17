@@ -11,6 +11,11 @@ from .sales_chart import SalesChartView
 from .sales_revenue_chart import SalesRevenueChartView
 from .sales_by_shops import SalesByShopsView
 from .sales_by_products import SalesByProductsView
+from .supplies_filters import SuppliesFiltersView
+from .supplies_summary import SuppliesSummaryView
+from .supplies_scheduled import SuppliesScheduledView
+from .supplies_in_transit import SuppliesInTransitView
+from .supplies_table import SuppliesTableView
 
 __all__ = [
     "ping",
@@ -29,4 +34,9 @@ __all__ = [
     "SalesByProductsView",
     "CriticalStockView",
     "ProblemProductsView",
+    "SuppliesFiltersView",
+    "SuppliesSummaryView",
+    "SuppliesScheduledView",
+    "SuppliesInTransitView",
+    "SuppliesTableView",
 ]
