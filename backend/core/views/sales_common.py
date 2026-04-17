@@ -105,3 +105,38 @@ def resolve_category_ids(category_id: str | None) -> list | None:
         raise ValidationError({"category": f"Категория с id={category_id} не найдена."}) from exc
 
     return get_descendant_ids(category)
+
+
+# ── сортировка таблиц ────────────────────────────────────────────────────────
+
+ALLOWED_ORDERS = ("asc", "desc")
+
+
+def resolve_sort(
+    sort_value: str | None,
+    order_value: str | None,
+    allowed_fields: tuple[str, ...],
+    default_field: str,
+    default_order: str = "desc",
+) -> tuple[str, str]:
+    """
+    Валидирует параметры `sort` и `order`.
+    Возвращает (sort_field, order). Если `sort_value` пуст — используется
+    `default_field`. Если `order_value` пуст — `default_order`.
+    """
+    field = sort_value or default_field
+    if field not in allowed_fields:
+        raise ValidationError(
+            {"sort": f"Допустимые значения: {list(allowed_fields)}"}
+        )
+
+    order = (order_value or default_order).lower()
+    if order not in ALLOWED_ORDERS:
+        raise ValidationError({"order": f"Допустимые значения: {list(ALLOWED_ORDERS)}"})
+
+    return field, order
+
+
+def apply_search(value: str | None) -> str:
+    """Нормализует значение поискового параметра для `icontains`."""
+    return (value or "").strip()

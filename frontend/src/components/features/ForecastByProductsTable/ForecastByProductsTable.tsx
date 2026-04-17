@@ -1,15 +1,25 @@
-import type { ForecastProductRow, ForecastByProductsResponse } from '../../../api/types';
+import { useState } from 'react';
+import { useApi } from '../../../api';
+import { useDebouncedValue } from '../../../hooks';
+import type {
+  ForecastProductRow,
+  ForecastByProductsResponse,
+} from '../../../api/types';
 import styles from './ForecastByProductsTable.module.css';
 import tableStyles from '../SalesByShopsTable/DataTableWithSearch.module.css';
 import {
   DataTableWithSearch,
   type DataTableColumn,
+  type SortDirection,
 } from '../SalesByShopsTable/DataTableWithSearch';
 
 interface ForecastByProductsTableProps {
-  data: ForecastByProductsResponse | null;
-  loading?: boolean;
+  shopId?: string;
+  categoryId?: string;
+  periodCode?: string;
 }
+
+type SortField = 'product_name' | 'forecast_qty' | 'previous_qty' | 'deviation_qty';
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat('ru-RU').format(value);
@@ -39,7 +49,6 @@ const COLUMNS: DataTableColumn<ForecastProductRow>[] = [
     className: tableStyles.tdRight,
     headerClassName: tableStyles.headerCellRight,
     sortable: true,
-    sortValue: (row) => row.forecast_qty,
     cell: (row) => `${formatNumber(row.forecast_qty)} шт.`,
   },
   {
@@ -48,7 +57,6 @@ const COLUMNS: DataTableColumn<ForecastProductRow>[] = [
     className: tableStyles.tdRight,
     headerClassName: tableStyles.headerCellRight,
     sortable: true,
-    sortValue: (row) => row.previous_qty,
     cell: (row) => `${formatNumber(row.previous_qty)} шт.`,
   },
   {
@@ -57,24 +65,49 @@ const COLUMNS: DataTableColumn<ForecastProductRow>[] = [
     className: tableStyles.tdRight,
     headerClassName: tableStyles.headerCellRight,
     sortable: true,
-    sortValue: (row) => row.deviation_qty,
     cell: (row) => <DeviationCell value={row.deviation_qty} />,
   },
 ];
 
-export function ForecastByProductsTable({ data, loading }: ForecastByProductsTableProps) {
-  if (loading) {
+export function ForecastByProductsTable({
+  shopId,
+  categoryId,
+  periodCode,
+}: ForecastByProductsTableProps) {
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortField>('forecast_qty');
+  const [order, setOrder] = useState<SortDirection>('desc');
+
+  const debouncedSearch = useDebouncedValue(search, 300);
+
+  const { data, loading } = useApi<ForecastByProductsResponse>(
+    '/forecast/by-products/',
+    {
+      shop: shopId,
+      category: categoryId,
+      period: periodCode,
+      search: debouncedSearch || undefined,
+      sort,
+      order,
+    }
+  );
+
+  const handleSortChange = (field: string, direction: SortDirection) => {
+    if (
+      field !== 'product_name' &&
+      field !== 'forecast_qty' &&
+      field !== 'previous_qty' &&
+      field !== 'deviation_qty'
+    )
+      return;
+    setSort(field);
+    setOrder(direction);
+  };
+
+  if (loading && !data) {
     return (
       <div className={styles.wrapper}>
         <div className={styles.skeleton} />
-      </div>
-    );
-  }
-
-  if (!data || data.rows.length === 0) {
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.empty}>Нет данных для отображения</div>
       </div>
     );
   }
@@ -83,20 +116,25 @@ export function ForecastByProductsTable({ data, loading }: ForecastByProductsTab
     <div className={styles.wrapper}>
       <DataTableWithSearch
         columns={COLUMNS}
-        rows={data.rows}
+        rows={data?.rows ?? []}
         getRowKey={(row) => row.product_id}
-        getSearchText={(row) => row.product_name}
         searchPlaceholder="Поиск по товару..."
-        initialSortField="forecast_qty"
-        initialSortDirection="desc"
         toolbarClassName={styles.header}
         searchInputClassName={styles.searchInput}
+        searchValue={search}
+        onSearchChange={setSearch}
+        sortField={sort}
+        sortDirection={order}
+        onSortChange={handleSortChange}
+        emptyMessage={
+          debouncedSearch
+            ? 'Ничего не найдено по запросу'
+            : 'Нет данных для отображения'
+        }
         leading={
           <div>
             <h3 className={styles.title}>Прогноз по товарам</h3>
-            <span className={styles.subtitle}>
-              {data.period_label}
-            </span>
+            <span className={styles.subtitle}>{data?.period_label ?? ''}</span>
           </div>
         }
       />

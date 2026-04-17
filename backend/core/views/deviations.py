@@ -174,12 +174,37 @@ class SurplusView(APIView):
 
 class CriticalStockView(APIView):
     """
-    GET /api/dashboard/critical-stock/
+    GET /api/dashboard/critical-stock/?deviation_type=deficit|surplus&limit=<int>
 
-    Возвращает критические отклонения для всех магазинов и категорий
+    Возвращает критические отклонения для всех магазинов и категорий.
+    Опционально фильтрует по типу (deficit/surplus) и ограничивает топ `limit`
+    записями, что позволяет сразу получать нужный топ без дополнительной
+    сортировки на клиенте.
     """
 
+    ALLOWED_TYPES = {StockDeviation.Type.DEFICIT, StockDeviation.Type.SURPLUS}
+    DEFAULT_LIMIT_MAX = 200
+
     def get(self, request: Request) -> Response:
+        deviation_type = request.query_params.get("deviation_type")
+        if deviation_type is not None and deviation_type not in self.ALLOWED_TYPES:
+            raise ValidationError(
+                {"deviation_type": f"Допустимые значения: {sorted(self.ALLOWED_TYPES)}"}
+            )
+
+        limit_raw = request.query_params.get("limit")
+        limit: int | None = None
+        if limit_raw is not None:
+            try:
+                limit = int(limit_raw)
+            except ValueError as exc:
+                raise ValidationError(
+                    {"limit": "Должно быть целым числом > 0."}
+                ) from exc
+            if limit <= 0:
+                raise ValidationError({"limit": "Должно быть > 0."})
+            limit = min(limit, self.DEFAULT_LIMIT_MAX)
+
         base_qs = StockDeviation.objects.filter(is_active=True)
         max_qty = base_qs.aggregate(max_qty=Max("deviation_qty"))["max_qty"] or 0
         if max_qty <= 0:
@@ -196,6 +221,11 @@ class CriticalStockView(APIView):
             .select_related("inventory__product", "inventory__shop")
             .order_by("-deviation_qty")
         )
+        if deviation_type:
+            stock_deviations = stock_deviations.filter(deviation_type=deviation_type)
+        if limit is not None:
+            stock_deviations = stock_deviations[:limit]
+
         data = []
         for stock_deviation in stock_deviations:
             data.append({

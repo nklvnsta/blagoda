@@ -38,6 +38,19 @@ export interface DataTableWithSearchProps<T> {
   sortField?: string;
   sortDirection?: SortDirection;
   onSortChange?: (field: string, direction: SortDirection) => void;
+  /**
+   * Controlled search value. When provided together with onSearchChange,
+   * internal client-side filtering is disabled and the parent owns the
+   * search state (useful for server-side search).
+   */
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  /**
+   * Message rendered inside the table body when there are no rows to show.
+   * When set, keeps the toolbar (search/filters) and the thead visible
+   * instead of unmounting the whole table.
+   */
+  emptyMessage?: string;
 }
 
 export function DataTableWithSearch<T>({
@@ -57,13 +70,28 @@ export function DataTableWithSearch<T>({
   sortField: controlledSortField,
   sortDirection: controlledSortDirection,
   onSortChange,
+  searchValue: controlledSearchValue,
+  onSearchChange,
+  emptyMessage,
 }: DataTableWithSearchProps<T>) {
   const isSortControlled = onSortChange !== undefined;
+  const isSearchControlled = onSearchChange !== undefined;
 
   const [internalSortField, setInternalSortField] = useState<string>(initialSortField);
   const [internalSortDirection, setInternalSortDirection] =
     useState<SortDirection>(initialSortDirection);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [internalSearchQuery, setInternalSearchQuery] = useState('');
+
+  const searchQuery = isSearchControlled
+    ? (controlledSearchValue ?? '')
+    : internalSearchQuery;
+  const handleSearchChange = (value: string) => {
+    if (isSearchControlled) {
+      onSearchChange?.(value);
+    } else {
+      setInternalSearchQuery(value);
+    }
+  };
 
   const sortField = isSortControlled ? (controlledSortField ?? '') : internalSortField;
   const sortDirection = isSortControlled
@@ -77,7 +105,13 @@ export function DataTableWithSearch<T>({
 
   const displayedRows = useMemo(() => {
     let list = rows;
-    if (!hideSearch && searchQuery.trim() && getSearchText) {
+    // In controlled search mode the server has already filtered rows.
+    if (
+      !isSearchControlled &&
+      !hideSearch &&
+      searchQuery.trim() &&
+      getSearchText
+    ) {
       const q = searchQuery.toLowerCase();
       list = rows.filter((row) => getSearchText(row).toLowerCase().includes(q));
     }
@@ -101,6 +135,7 @@ export function DataTableWithSearch<T>({
     getSearchText,
     hideSearch,
     isSortControlled,
+    isSearchControlled,
   ]);
 
   const handleSort = (field: string) => {
@@ -144,7 +179,7 @@ export function DataTableWithSearch<T>({
               type="text"
               placeholder={searchPlaceholder}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               icon={<SearchIcon size={16} />}
               className={searchInputClassName}
             />
@@ -182,15 +217,26 @@ export function DataTableWithSearch<T>({
             </tr>
           </thead>
           <tbody>
-            {displayedRows.map((row) => (
-              <tr key={getRowKey(row)} className={styles.row}>
-                {columns.map((col) => (
-                  <td key={col.id} className={col.className}>
-                    {renderCell(col, row, 'body')}
-                  </td>
-                ))}
+            {displayedRows.length === 0 && emptyMessage ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className={styles.emptyCell}
+                >
+                  {emptyMessage}
+                </td>
               </tr>
-            ))}
+            ) : (
+              displayedRows.map((row) => (
+                <tr key={getRowKey(row)} className={styles.row}>
+                  {columns.map((col) => (
+                    <td key={col.id} className={col.className}>
+                      {renderCell(col, row, 'body')}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
           {footerRow !== undefined && (
             <tfoot>

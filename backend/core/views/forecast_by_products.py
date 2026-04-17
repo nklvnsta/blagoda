@@ -8,7 +8,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import ForecastEntry, Product, Sales
-from core.views.sales_common import resolve_category_ids, resolve_period, validate_shop
+from core.views.sales_common import (
+    apply_search,
+    resolve_category_ids,
+    resolve_period,
+    resolve_sort,
+    validate_shop,
+)
+
+
+ALLOWED_FORECAST_SORT_FIELDS = (
+    "product_name",
+    "forecast_qty",
+    "previous_qty",
+    "deviation_qty",
+)
 
 
 class ForecastProductRowSerializer(serializers.Serializer):
@@ -52,6 +66,15 @@ class ForecastByProductsView(APIView):
         validate_shop(shop_id)
         category_ids = resolve_category_ids(category_id)
 
+        search = apply_search(request.query_params.get("search"))
+        sort_field, order = resolve_sort(
+            request.query_params.get("sort"),
+            request.query_params.get("order"),
+            allowed_fields=ALLOWED_FORECAST_SORT_FIELDS,
+            default_field="forecast_qty",
+            default_order="desc",
+        )
+
         period_length = (period.date_to - period.date_from).days + 1
         prev_date_to = period.date_from - timedelta(days=1)
         prev_date_from = prev_date_to - timedelta(days=period_length - 1)
@@ -64,6 +87,8 @@ class ForecastByProductsView(APIView):
         )
         if category_ids:
             products_qs = products_qs.filter(category_id__in=category_ids)
+        if search:
+            products_qs = products_qs.filter(name__icontains=search)
 
         forecast_qs = ForecastEntry.objects.filter(
             date__gte=period.date_from,
@@ -112,7 +137,11 @@ class ForecastByProductsView(APIView):
                 "deviation_qty": forecast_qty - previous_qty,
             })
 
-        rows.sort(key=lambda r: r["forecast_qty"], reverse=True)
+        reverse = order == "desc"
+        if sort_field == "product_name":
+            rows.sort(key=lambda r: r["product_name"].lower(), reverse=reverse)
+        else:
+            rows.sort(key=lambda r: r[sort_field], reverse=reverse)
 
         data = {
             "quantity_unit": "шт.",
@@ -127,6 +156,9 @@ class ForecastByProductsView(APIView):
                 "period": period.code,
                 "date_from": period.date_from.isoformat(),
                 "date_to": period.date_to.isoformat(),
+                "search": search or None,
+                "sort": sort_field,
+                "order": order,
             },
         }
 

@@ -1,12 +1,21 @@
+import { useState } from 'react';
+import { useApi } from '../../../api';
+import { useDebouncedValue } from '../../../hooks';
 import type { SalesByShopsResponse, ShopSalesRow } from '../../../api/types';
 import styles from './SalesByShopsTable.module.css';
 import tableStyles from './DataTableWithSearch.module.css';
-import { DataTableWithSearch, type DataTableColumn } from './DataTableWithSearch';
+import {
+  DataTableWithSearch,
+  type DataTableColumn,
+  type SortDirection,
+} from './DataTableWithSearch';
 
 interface SalesByShopsTableProps {
-  data: SalesByShopsResponse | null;
-  loading?: boolean;
+  categoryId?: string;
+  periodCode?: string;
 }
+
+type SortField = 'shop_name' | 'revenue' | 'sold_qty' | 'receipt_count';
 
 function formatCurrency(value: string | number): string {
   const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -34,7 +43,6 @@ const SHOP_COLUMNS: DataTableColumn<ShopSalesRow>[] = [
     header: 'Выручка',
     className: tableStyles.tdRight,
     sortable: true,
-    sortValue: (row) => parseFloat(row.revenue),
     cell: (row) => formatCurrency(row.revenue),
     footerCell: (row) => <strong>{formatCurrency(row.revenue)}</strong>,
   },
@@ -43,7 +51,6 @@ const SHOP_COLUMNS: DataTableColumn<ShopSalesRow>[] = [
     header: 'Продано, шт.',
     className: tableStyles.tdRight,
     sortable: true,
-    sortValue: (row) => row.sold_qty,
     cell: (row) => formatNumber(row.sold_qty),
     footerCell: (row) => <strong>{formatNumber(row.sold_qty)}</strong>,
   },
@@ -52,25 +59,42 @@ const SHOP_COLUMNS: DataTableColumn<ShopSalesRow>[] = [
     header: 'Количество чеков',
     className: tableStyles.tdRight,
     sortable: true,
-    sortValue: (row) => row.receipt_count,
     cell: (row) => formatNumber(row.receipt_count),
     footerCell: (row) => <strong>{formatNumber(row.receipt_count)}</strong>,
   },
 ];
 
-export function SalesByShopsTable({ data, loading }: SalesByShopsTableProps) {
-  if (loading) {
+export function SalesByShopsTable({ categoryId, periodCode }: SalesByShopsTableProps) {
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortField>('revenue');
+  const [order, setOrder] = useState<SortDirection>('desc');
+
+  const debouncedSearch = useDebouncedValue(search, 300);
+
+  const { data, loading } = useApi<SalesByShopsResponse>('/sales/by-shops/', {
+    category: categoryId,
+    period: periodCode,
+    search: debouncedSearch || undefined,
+    sort,
+    order,
+  });
+
+  const handleSortChange = (field: string, direction: SortDirection) => {
+    if (
+      field !== 'shop_name' &&
+      field !== 'revenue' &&
+      field !== 'sold_qty' &&
+      field !== 'receipt_count'
+    )
+      return;
+    setSort(field);
+    setOrder(direction);
+  };
+
+  if (loading && !data) {
     return (
       <div className={styles.wrapper}>
         <div className={styles.skeleton} />
-      </div>
-    );
-  }
-
-  if (!data || data.rows.length === 0) {
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.empty}>Нет данных для отображения</div>
       </div>
     );
   }
@@ -79,21 +103,26 @@ export function SalesByShopsTable({ data, loading }: SalesByShopsTableProps) {
     <div className={styles.wrapper}>
       <DataTableWithSearch
         columns={SHOP_COLUMNS}
-        rows={data.rows}
+        rows={data?.rows ?? []}
         getRowKey={(row) => row.shop_id}
-        getSearchText={(row) => row.shop_name}
         searchPlaceholder="Поиск по магазину..."
-        footerRow={data.total}
-        initialSortField="revenue"
-        initialSortDirection="desc"
+        footerRow={data && data.rows.length > 0 ? data.total : undefined}
         toolbarClassName={styles.header}
         searchInputClassName={styles.searchInput}
+        searchValue={search}
+        onSearchChange={setSearch}
+        sortField={sort}
+        sortDirection={order}
+        onSortChange={handleSortChange}
+        emptyMessage={
+          debouncedSearch
+            ? 'Ничего не найдено по запросу'
+            : 'Нет данных для отображения'
+        }
         leading={
           <div>
             <h3 className={styles.title}>Продажи по магазинам</h3>
-            <span className={styles.subtitle}>
-              {data.period_label}
-            </span>
+            <span className={styles.subtitle}>{data?.period_label ?? ''}</span>
           </div>
         }
       />

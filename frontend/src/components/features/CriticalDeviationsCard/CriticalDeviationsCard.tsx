@@ -1,14 +1,7 @@
-import { useMemo } from 'react';
 import { useApi } from '../../../api';
 import type { CriticalStockItem } from '../../../api/types';
 import { TargetIcon, ChevronRight } from '../../icons';
 import styles from './CriticalDeviationsCard.module.css';
-
-function pickTopByType(items: CriticalStockItem[], type: CriticalStockItem['deviation_type']) {
-  return items
-    .filter((i) => i.deviation_type === type)
-    .sort((a, b) => b.deviation_qty - a.deviation_qty)[0];
-}
 
 interface RowProps {
   variant: 'deficit' | 'surplus';
@@ -46,15 +39,20 @@ function DeviationRow({ variant, item }: RowProps) {
 }
 
 export function CriticalDeviationsCard() {
-  const { data, loading, error } = useApi<CriticalStockItem[]>('/dashboard/critical-stock/');
+  const deficitQuery = useApi<CriticalStockItem[]>(
+    '/dashboard/critical-stock/',
+    { deviation_type: 'deficit', limit: '1' }
+  );
+  const surplusQuery = useApi<CriticalStockItem[]>(
+    '/dashboard/critical-stock/',
+    { deviation_type: 'surplus', limit: '1' }
+  );
 
-  const { deficit, surplus } = useMemo(() => {
-    if (!data?.length) return { deficit: undefined, surplus: undefined };
-    return {
-      deficit: pickTopByType(data, 'deficit'),
-      surplus: pickTopByType(data, 'surplus'),
-    };
-  }, [data]);
+  const loading = deficitQuery.loading || surplusQuery.loading;
+  const error = deficitQuery.error || surplusQuery.error;
+
+  const deficit = deficitQuery.data?.[0];
+  const surplus = surplusQuery.data?.[0];
 
   if (loading) {
     return <div className={styles.skeleton} />;

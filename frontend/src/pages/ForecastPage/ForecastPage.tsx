@@ -6,7 +6,6 @@ import { useApi } from '../../api';
 import type {
   ForecastSummaryResponse,
   ForecastDemandChartResponse,
-  ForecastByProductsResponse,
 } from '../../api/types';
 import { KPICardsRow } from '../../components/features/KPICardsRow';
 import { ForecastDemandChart } from '../../components/features/ForecastDemandChart';
@@ -28,12 +27,6 @@ export function ForecastPage() {
   });
 
   const chart = useApi<ForecastDemandChartResponse>('/forecast/demand-chart/', {
-    shop: filters.shopId,
-    category: filters.categoryId,
-    period: filters.periodCode,
-  });
-
-  const table = useApi<ForecastByProductsResponse>('/forecast/by-products/', {
     shop: filters.shopId,
     category: filters.categoryId,
     period: filters.periodCode,
@@ -65,7 +58,11 @@ export function ForecastPage() {
         </KPICardsRow>
       </div>
 
-      <ForecastByProductsTable data={table.data} loading={table.loading} />
+      <ForecastByProductsTable
+        shopId={filters.shopId}
+        categoryId={filters.categoryId}
+        periodCode={filters.periodCode}
+      />
     </div>
   );
 }

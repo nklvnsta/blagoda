@@ -7,7 +7,16 @@ from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
 from core.models import Product, Sales
-from core.views.sales_common import resolve_category_ids, resolve_period, validate_shop
+from core.views.sales_common import (
+    apply_search,
+    resolve_category_ids,
+    resolve_period,
+    resolve_sort,
+    validate_shop,
+)
+
+
+ALLOWED_PRODUCT_SORT_FIELDS = ("product_name", "sold_qty")
 
 
 class ProductSalesRowSerializer(serializers.Serializer):
@@ -47,9 +56,20 @@ class SalesByProductsView(APIView):
         validate_shop(shop_id)
         category_ids = resolve_category_ids(category_id)
 
+        search = apply_search(request.query_params.get("search"))
+        sort_field, order = resolve_sort(
+            request.query_params.get("sort"),
+            request.query_params.get("order"),
+            allowed_fields=ALLOWED_PRODUCT_SORT_FIELDS,
+            default_field="sold_qty",
+            default_order="desc",
+        )
+
         products_qs = Product.objects.filter(is_active=True).select_related("category").order_by("name")
         if category_ids:
             products_qs = products_qs.filter(category_id__in=category_ids)
+        if search:
+            products_qs = products_qs.filter(name__icontains=search)
 
         sales_qs = Sales.objects.filter(
             date__gte=period.date_from,
@@ -79,7 +99,11 @@ class SalesByProductsView(APIView):
             })
             total_sold_qty += qty
 
-        rows.sort(key=lambda x: x["sold_qty"], reverse=True)
+        reverse = order == "desc"
+        if sort_field == "product_name":
+            rows.sort(key=lambda x: x["product_name"].lower(), reverse=reverse)
+        else:
+            rows.sort(key=lambda x: x[sort_field], reverse=reverse)
 
         data = {
             "quantity_unit": "шт.",
@@ -100,6 +124,9 @@ class SalesByProductsView(APIView):
                 "period": period.code,
                 "date_from": period.date_from.isoformat(),
                 "date_to": period.date_to.isoformat(),
+                "search": search or None,
+                "sort": sort_field,
+                "order": order,
             },
         }
 

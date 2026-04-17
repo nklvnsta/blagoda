@@ -6,8 +6,6 @@ import { useApi } from "../../api";
 import type {
   SalesData,
   SalesRevenueChartResponse,
-  SalesByShopsResponse,
-  SalesByProductsResponse,
 } from "../../api/types";
 import { KPICardsRow } from "../../components/features/KPICardsRow";
 import { SalesRevenueChart } from "../../components/features/SalesRevenueChart";
@@ -30,17 +28,6 @@ export function SalesPage() {
   });
 
   const salesChart = useApi<SalesRevenueChartResponse>('/sales/sales-chart/', {
-    shop: filters.shopId,
-    category: filters.categoryId,
-    period: filters.periodCode,
-  });
-
-  const shopsTable = useApi<SalesByShopsResponse>('/sales/by-shops/', {
-    category: filters.categoryId,
-    period: filters.periodCode,
-  });
-
-  const productsTable = useApi<SalesByProductsResponse>('/sales/by-products/', {
     shop: filters.shopId,
     category: filters.categoryId,
     period: filters.periodCode,
@@ -81,10 +68,17 @@ export function SalesPage() {
 
       <div className={styles.tablesRow}>
         <div className={styles.tableSlot}>
-          <SalesByShopsTable data={shopsTable.data} loading={shopsTable.loading} />
+          <SalesByShopsTable
+            categoryId={filters.categoryId}
+            periodCode={filters.periodCode}
+          />
         </div>
         <div className={styles.tableSlot}>
-          <SalesByProductsTable data={productsTable.data} loading={productsTable.loading} />
+          <SalesByProductsTable
+            shopId={filters.shopId}
+            categoryId={filters.categoryId}
+            periodCode={filters.periodCode}
+          />
         </div>
       </div>
     </div>

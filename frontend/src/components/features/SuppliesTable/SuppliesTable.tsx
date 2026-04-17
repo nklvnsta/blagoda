@@ -173,20 +173,14 @@ export function SuppliesTable({
     );
   }
 
-  if (!data || data.results.length === 0) {
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.header}>{header}</div>
-        <div className={styles.empty}>Нет данных для отображения</div>
-      </div>
-    );
-  }
+  const rows = data?.results ?? [];
+  const hasResults = rows.length > 0;
 
   return (
     <div className={styles.wrapper}>
       <DataTableWithSearch
         columns={COLUMNS}
-        rows={data.results}
+        rows={rows}
         getRowKey={(row) => `${row.shop_id}-${row.dispatch_date}`}
         hideSearch
         toolbarClassName={styles.header}
@@ -194,13 +188,18 @@ export function SuppliesTable({
         sortField={sort ?? ''}
         sortDirection={order}
         onSortChange={handleSortChange}
+        emptyMessage={
+          status ? 'По выбранному статусу ничего не найдено' : 'Нет данных для отображения'
+        }
         pagination={
-          <Pagination
-            page={page}
-            hasPrev={data.previous !== null}
-            hasNext={data.next !== null}
-            onPageChange={onPageChange}
-          />
+          hasResults ? (
+            <Pagination
+              page={page}
+              hasPrev={data?.previous !== null && data?.previous !== undefined}
+              hasNext={data?.next !== null && data?.next !== undefined}
+              onPageChange={onPageChange}
+            />
+          ) : undefined
         }
       />
     </div>

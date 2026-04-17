@@ -8,7 +8,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import Receipt, Sales, Shop
-from core.views.sales_common import resolve_category_ids, resolve_period, validate_shop
+from core.views.sales_common import (
+    apply_search,
+    resolve_category_ids,
+    resolve_period,
+    resolve_sort,
+    validate_shop,
+)
+
+
+ALLOWED_SHOP_SORT_FIELDS = ("shop_name", "revenue", "sold_qty", "receipt_count")
 
 
 class ShopSalesRowSerializer(serializers.Serializer):
@@ -54,8 +63,19 @@ class SalesByShopsView(APIView):
         category_id = request.query_params.get("category")
         category_ids = resolve_category_ids(category_id)
 
-        # Получаем все активные магазины
+        search = apply_search(request.query_params.get("search"))
+        sort_field, order = resolve_sort(
+            request.query_params.get("sort"),
+            request.query_params.get("order"),
+            allowed_fields=ALLOWED_SHOP_SORT_FIELDS,
+            default_field="revenue",
+            default_order="desc",
+        )
+
+        # Получаем все активные магазины; фильтр по названию — на БД.
         shops = Shop.objects.filter(is_active=True).order_by("name")
+        if search:
+            shops = shops.filter(name__icontains=search)
 
         rows = []
         total_revenue = Decimal("0.00")
@@ -108,8 +128,11 @@ class SalesByShopsView(APIView):
             total_sold_qty += sold_qty
             total_receipt_count += receipt_count
 
-        # Сортируем по выручке (убывание)
-        rows.sort(key=lambda x: x["revenue"], reverse=True)
+        reverse = order == "desc"
+        if sort_field == "shop_name":
+            rows.sort(key=lambda x: x["shop_name"].lower(), reverse=reverse)
+        else:
+            rows.sort(key=lambda x: x[sort_field], reverse=reverse)
 
         data = {
             "currency": "руб.",
@@ -131,6 +154,9 @@ class SalesByShopsView(APIView):
                 "period": period.code,
                 "date_from": period.date_from.isoformat(),
                 "date_to": period.date_to.isoformat(),
+                "search": search or None,
+                "sort": sort_field,
+                "order": order,
             },
         }
 
