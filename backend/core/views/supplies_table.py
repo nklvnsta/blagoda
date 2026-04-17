@@ -14,10 +14,12 @@ dispatch_date. Иначе показываем все группы, отсорт
 """
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.models import BatchShipment
 from core.views.supplies_common import (
     SuppliesPagination,
     active_shipments_qs,
@@ -26,6 +28,15 @@ from core.views.supplies_common import (
     row_from_group,
     validate_shop,
 )
+
+
+ALLOWED_SORT_FIELDS = {"positions_count", "amount"}
+ALLOWED_ORDERS = {"asc", "desc"}
+ALLOWED_STATUSES = {
+    BatchShipment.Status.SCHEDULED,
+    BatchShipment.Status.IN_TRANSIT,
+    BatchShipment.Status.DELIVERED,
+}
 
 
 class SupplyRowSerializer(serializers.Serializer):
@@ -43,7 +54,25 @@ class SuppliesTableView(APIView):
     def get(self, request: Request) -> Response:
         date_raw = request.query_params.get("date")
         shop_id = request.query_params.get("shop")
+        status_raw = request.query_params.get("status")
+        sort_raw = request.query_params.get("sort")
+        order_raw = (request.query_params.get("order") or "desc").lower()
         validate_shop(shop_id)
+
+        if status_raw and status_raw not in ALLOWED_STATUSES:
+            raise ValidationError(
+                {"status": f"Допустимые значения: {sorted(ALLOWED_STATUSES)}"}
+            )
+
+        if sort_raw and sort_raw not in ALLOWED_SORT_FIELDS:
+            raise ValidationError(
+                {"sort": f"Допустимые значения: {sorted(ALLOWED_SORT_FIELDS)}"}
+            )
+
+        if order_raw not in ALLOWED_ORDERS:
+            raise ValidationError(
+                {"order": f"Допустимые значения: {sorted(ALLOWED_ORDERS)}"}
+            )
 
         base = active_shipments_qs()
         if shop_id:
@@ -57,6 +86,13 @@ class SuppliesTableView(APIView):
 
         rows = [row_from_group(item) for item in groups_qs]
 
+        if status_raw:
+            rows = [r for r in rows if r["status"] == status_raw]
+
+        if sort_raw:
+            reverse = order_raw == "desc"
+            rows.sort(key=lambda r: r[sort_raw], reverse=reverse)
+
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(rows, request, view=self)
 
@@ -66,5 +102,8 @@ class SuppliesTableView(APIView):
         response.data["filters"] = {
             "date": date_raw,
             "shop": shop_id,
+            "status": status_raw,
+            "sort": sort_raw,
+            "order": order_raw if sort_raw else None,
         }
         return response

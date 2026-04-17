@@ -1,0 +1,12 @@
+.panelsRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    align-items: stretch;
+}
+
+@media (max-width: 1100px) {
+    .panelsRow {
+        grid-template-columns: 1fr;
+    }
+}

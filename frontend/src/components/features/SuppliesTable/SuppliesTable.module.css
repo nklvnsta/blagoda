@@ -1,0 +1,124 @@
+.wrapper {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.headerInner {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-black);
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.skeleton {
+    height: 400px;
+    background: var(--color-bg-surface-muted);
+    border-radius: var(--radius-md);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-sm);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--space-3);
+    border-radius: 999px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-regular);
+    white-space: nowrap;
+    color: var(--color-text-on-surface, var(--color-text-primary));
+}
+
+.pillInTransit {
+    background: #E0E9F7;
+}
+
+.pillDelivered {
+    background: rgba(193, 251, 219, 0.68);
+}
+
+.pillScheduled {
+    background: var(--color-bg-surface-muted, #EEE);
+    color: var(--color-text-secondary);
+}
+
+.pillCancelled {
+    background: #F7E0E0;
+    color: var(--color-text-secondary);
+}
+
+.paginator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-size: var(--font-size-sm);
+}
+
+.pageButton {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-family: inherit;
+    font-size: inherit;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+    background: var(--color-bg-surface-muted);
+    color: var(--color-text-primary);
+}
+
+.pageButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pageNumber {
+    min-width: 24px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-regular);
+    color: var(--color-text-primary);
+}

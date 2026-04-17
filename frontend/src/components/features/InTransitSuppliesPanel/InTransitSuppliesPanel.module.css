@@ -1,0 +1,110 @@
+.root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-5);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md, 12px);
+    flex: 1;
+}
+
+.title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-normal);
+    margin: 0;
+}
+
+.scroll {
+    max-height: 240px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-right: calc(-1 * var(--space-2));
+    padding-right: var(--space-2);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+}
+
+.icon {
+    display: inline-flex;
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
+}
+
+.shopName {
+    font-weight: var(--font-weight-regular);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--color-border-default);
+    margin: 0 var(--space-1);
+    min-width: 16px;
+    transform: translateY(-3px);
+}
+
+.positions {
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--space-3);
+    border-radius: 999px;
+    background: #E0E9F7;
+    color: var(--color-text-on-surface, var(--color-text-primary));
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-regular);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.empty {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    margin: 0;
+}
+
+.skeleton {
+    min-height: 220px;
+    border-radius: var(--radius-md, 12px);
+    background: var(--color-bg-surface-muted);
+    animation: pulse 1.5s ease-in-out infinite;
+    flex: 1 1 0;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.55;
+    }
+}

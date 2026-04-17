@@ -20,14 +20,24 @@ export interface DataTableWithSearchProps<T> {
   columns: DataTableColumn<T>[];
   rows: T[];
   getRowKey: (row: T) => string;
-  getSearchText: (row: T) => string;
+  getSearchText?: (row: T) => string;
   searchPlaceholder?: string;
   leading?: ReactNode;
   footerRow?: T;
-  initialSortField: string;
+  initialSortField?: string;
   initialSortDirection?: SortDirection;
   toolbarClassName?: string;
   searchInputClassName?: string;
+  hideSearch?: boolean;
+  pagination?: ReactNode;
+  /**
+   * Controlled sort field. When provided together with onSortChange, internal
+   * client-side sorting is disabled and the parent owns the sort state
+   * (useful for server-side sorting).
+   */
+  sortField?: string;
+  sortDirection?: SortDirection;
+  onSortChange?: (field: string, direction: SortDirection) => void;
 }
 
 export function DataTableWithSearch<T>({
@@ -38,14 +48,27 @@ export function DataTableWithSearch<T>({
   searchPlaceholder = 'Поиск...',
   leading,
   footerRow,
-  initialSortField,
+  initialSortField = '',
   initialSortDirection = 'desc',
   toolbarClassName = styles.toolbar,
   searchInputClassName,
+  hideSearch = false,
+  pagination,
+  sortField: controlledSortField,
+  sortDirection: controlledSortDirection,
+  onSortChange,
 }: DataTableWithSearchProps<T>) {
-  const [sortField, setSortField] = useState<string>(initialSortField);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortDirection);
+  const isSortControlled = onSortChange !== undefined;
+
+  const [internalSortField, setInternalSortField] = useState<string>(initialSortField);
+  const [internalSortDirection, setInternalSortDirection] =
+    useState<SortDirection>(initialSortDirection);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const sortField = isSortControlled ? (controlledSortField ?? '') : internalSortField;
+  const sortDirection = isSortControlled
+    ? (controlledSortDirection ?? 'desc')
+    : internalSortDirection;
 
   const sortableColumn = useMemo(
     () => columns.find((c) => c.id === sortField && c.sortable && c.sortValue),
@@ -54,11 +77,12 @@ export function DataTableWithSearch<T>({
 
   const displayedRows = useMemo(() => {
     let list = rows;
-    if (searchQuery.trim()) {
+    if (!hideSearch && searchQuery.trim() && getSearchText) {
       const q = searchQuery.toLowerCase();
       list = rows.filter((row) => getSearchText(row).toLowerCase().includes(q));
     }
-    if (!sortableColumn?.sortValue) {
+    // In controlled mode, rows are already sorted server-side — don't sort again.
+    if (isSortControlled || !sortableColumn?.sortValue) {
       return list;
     }
     const sorted = [...list];
@@ -69,16 +93,30 @@ export function DataTableWithSearch<T>({
       return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
     });
     return sorted;
-  }, [rows, searchQuery, sortableColumn, sortDirection, getSearchText]);
+  }, [
+    rows,
+    searchQuery,
+    sortableColumn,
+    sortDirection,
+    getSearchText,
+    hideSearch,
+    isSortControlled,
+  ]);
 
   const handleSort = (field: string) => {
-    const col = columns.find((c) => c.id === field && c.sortable && c.sortValue);
+    const col = columns.find((c) => c.id === field && c.sortable);
     if (!col) return;
+    const nextDirection: SortDirection =
+      sortField === field ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'desc';
+    if (isSortControlled) {
+      onSortChange?.(field, nextDirection);
+      return;
+    }
     if (sortField === field) {
-      setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+      setInternalSortDirection(nextDirection);
     } else {
-      setSortField(field);
-      setSortDirection('desc');
+      setInternalSortField(field);
+      setInternalSortDirection('desc');
     }
   };
 
@@ -98,17 +136,21 @@ export function DataTableWithSearch<T>({
 
   return (
     <>
-      <div className={toolbarClassName}>
-        {leading}
-        <Input
-          type="text"
-          placeholder={searchPlaceholder}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          icon={<SearchIcon size={16} />}
-          className={searchInputClassName}
-        />
-      </div>
+      {(leading || !hideSearch) && (
+        <div className={toolbarClassName}>
+          {leading}
+          {!hideSearch && (
+            <Input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              icon={<SearchIcon size={16} />}
+              className={searchInputClassName}
+            />
+          )}
+        </div>
+      )}
 
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
@@ -116,7 +158,7 @@ export function DataTableWithSearch<T>({
             <tr>
               {columns.map((col) => (
                 <th key={col.id} className={col.headerClassName}>
-                  {col.sortable && col.sortValue ? (
+                  {col.sortable && (col.sortValue || isSortControlled) ? (
                     <button
                       type="button"
                       className={styles.sortButton}
@@ -163,6 +205,8 @@ export function DataTableWithSearch<T>({
           )}
         </table>
       </div>
+
+      {pagination && <div className={styles.pagination}>{pagination}</div>}
     </>
   );
 }

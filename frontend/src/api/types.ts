@@ -199,3 +199,71 @@ export interface SalesByProductsResponse {
   period_label: string;
   filters: Record<string, string | null>;
 }
+
+// ── Supplies (Поставки) ──────────────────────────────────────────────────
+
+export type SupplyStatus = 'scheduled' | 'in_transit' | 'delivered' | 'cancelled';
+
+export interface SuppliesFiltersResponse {
+  shops: { id: string; name: string }[];
+}
+
+export interface SuppliesSummaryResponse {
+  date: string;
+  shipped_qty_today: number;
+  shipped_amount_today: string;
+  in_transit_deliveries: number;
+  tomorrow_positions: number;
+  quantity_unit: string;
+  currency: string;
+  filters: Record<string, string | null>;
+}
+
+export interface ScheduledShopRow {
+  shop_id: string;
+  shop_name: string;
+  positions_count: number;
+}
+
+export interface SuppliesScheduledResponse {
+  date: string;
+  rows: ScheduledShopRow[];
+  total_positions: number;
+  total_shops: number;
+  filters: Record<string, string | number | null>;
+}
+
+export interface InTransitRow {
+  shop_id: string;
+  shop_name: string;
+  dispatch_date: string;
+  positions_count: number;
+  status: SupplyStatus;
+}
+
+export interface SuppliesInTransitResponse {
+  rows: InTransitRow[];
+  total_deliveries: number;
+  total_positions: number;
+  filters: Record<string, string | number | null>;
+}
+
+export interface SupplyRow {
+  shop_id: string;
+  shop_name: string;
+  dispatch_date: string;
+  positions_count: number;
+  amount: string;
+  status: SupplyStatus;
+}
+
+export interface SuppliesTableResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: SupplyRow[];
+  currency: string;
+  filters: Record<string, string | null>;
+}
+
+export type SuppliesTableSort = 'positions_count' | 'amount';

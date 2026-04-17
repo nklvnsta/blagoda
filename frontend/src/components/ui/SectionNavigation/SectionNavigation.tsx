@@ -12,7 +12,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'sales', label: 'Продажи', to: '/sales' },
   { id: 'forecast', label: 'Прогноз спроса', to: '/forecast' },
   { id: 'inventory', label: 'Запасы' },
-  { id: 'supplies', label: 'Поставки' },
+  { id: 'supplies', label: 'Поставки', to: '/supplies' },
   { id: 'order-picking', label: 'Сбор заказа' },
   { id: 'reports', label: 'Отчеты' },
 ];

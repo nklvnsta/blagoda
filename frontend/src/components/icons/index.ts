@@ -7,4 +7,5 @@ export { ChevronRight } from './ChevronRight';
 export { ChevronDown } from './ChevronDown';
 export { ChevronUp } from './ChevronUp';
 export { SearchIcon } from './SearchIcon';
+export { InboxIcon } from './InboxIcon';
 export type { IconProps } from './types';
