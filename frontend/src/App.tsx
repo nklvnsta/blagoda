@@ -4,6 +4,8 @@ import { DashboardPage } from './pages/DashboardPage';
 import { SalesPage } from './pages/SalesPage';
 import { ForecastPage } from './pages/ForecastPage';
 import { SuppliesPage } from './pages/SuppliesPage';
+import { PickingPage } from './pages/PickingPage';
+import { PickingDetailPage } from './pages/PickingDetailPage';
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/forecast" element={<ForecastPage />} />
           <Route path="/supplies" element={<SuppliesPage />} />
+          <Route path="/picking" element={<PickingPage />} />
+          <Route path="/picking/:shopId" element={<PickingDetailPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

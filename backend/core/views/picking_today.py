@@ -26,7 +26,7 @@ from core.views.picking_common import (
     row_from_picking_group,
     today_picking_qs,
 )
-from core.views.sales_common import resolve_sort, validate_shop
+from core.views.sales_common import apply_search, resolve_sort, validate_shop
 
 
 ALLOWED_SORT_FIELDS = ("shop_name", "positions_count", "ordered_units", "picked_units")
@@ -50,6 +50,7 @@ class PickingTodayView(APIView):
         status_raw = request.query_params.get("status")
         sort_raw = request.query_params.get("sort")
         order_raw = request.query_params.get("order")
+        search_raw = apply_search(request.query_params.get("search"))
 
         validate_shop(shop_id)
 
@@ -67,7 +68,11 @@ class PickingTodayView(APIView):
             default_order=default_order,
         )
 
-        groups = picking_group_qs(today_picking_qs(shop_id=shop_id))
+        base = today_picking_qs(shop_id=shop_id)
+        if search_raw:
+            base = base.filter(shop__name__icontains=search_raw)
+
+        groups = picking_group_qs(base)
         rows = [row_from_picking_group(item) for item in groups]
 
         if status_raw:
@@ -86,6 +91,7 @@ class PickingTodayView(APIView):
         response.data["filters"] = {
             "shop": shop_id,
             "status": status_raw,
+            "search": search_raw or None,
             "sort": sort_field,
             "order": order,
         }

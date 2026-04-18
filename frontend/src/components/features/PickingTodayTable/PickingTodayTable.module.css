@@ -1,0 +1,120 @@
+.wrapper {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.headerInner {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-black);
+    color: var(--color-text-primary);
+}
+
+.searchInput {
+    min-width: 260px;
+}
+
+.skeleton {
+    height: 400px;
+    background: var(--color-bg-surface-muted);
+    border-radius: var(--radius-md);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.actionButton {
+    background: var(--color-brand-primary);
+    color: var(--color-text-on-brand);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: var(--font-size-sm);
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.1s ease;
+}
+
+.actionButton:hover {
+    filter: brightness(0.92);
+}
+
+.actionButtonSecondary {
+    background: var(--color-bg-secondary-btn);
+    color: var(--color-text-secondary);
+}
+
+.paginator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-size: var(--font-size-sm);
+}
+
+.pageButton {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-family: inherit;
+    font-size: inherit;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+    background: var(--color-bg-surface-muted);
+    color: var(--color-text-primary);
+}
+
+.pageButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pageNumber {
+    min-width: 24px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-regular);
+    color: var(--color-text-primary);
+}

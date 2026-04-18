@@ -267,3 +267,76 @@ export interface SuppliesTableResponse {
 }
 
 export type SuppliesTableSort = 'positions_count' | 'amount';
+
+// ── Picking (Сбор заказа) ────────────────────────────────────────────────
+
+export type GroupPickStatus = 'not_started' | 'in_progress' | 'partial' | 'picked';
+export type RowPickStatus = 'not_started' | 'partial' | 'picked';
+
+export interface PickingSummaryResponse {
+  total_shops: number;
+  not_started_count: number;
+  in_progress_count: number;
+  partial_count: number;
+  picked_count: number;
+  filters: Record<string, string | null>;
+}
+
+export interface PickingShopRow {
+  shop_id: string;
+  shop_name: string;
+  positions_count: number;
+  ordered_units: number;
+  picked_units: number;
+  pick_status: GroupPickStatus;
+}
+
+export interface PickingTodayResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: PickingShopRow[];
+  filters: Record<string, string | null>;
+}
+
+export type PickingTodaySort =
+  | 'shop_name'
+  | 'positions_count'
+  | 'ordered_units'
+  | 'picked_units';
+
+export interface PickingItem {
+  id: string;
+  position_no: number;
+  product_id: string;
+  product_name: string;
+  unit: string;
+  ordered_quantity: number;
+  picked_quantity: number;
+  pick_status: RowPickStatus;
+}
+
+export interface PickingDetailResponse {
+  shop: { id: string; name: string };
+  dispatch_date: string;
+  pick_status: GroupPickStatus;
+  totals: { ordered_units: number; picked_units: number };
+  items: PickingItem[];
+}
+
+export interface PickingBulkSavePayload {
+  items: { id: string; picked_quantity: number }[];
+}
+
+export interface PickingBulkSaveResponse {
+  updated_count: number;
+  totals: { ordered_units: number; picked_units: number };
+  pick_status: GroupPickStatus;
+}
+
+export interface PickingDispatchResponse {
+  shop: { id: string; name: string };
+  dispatch_date: string;
+  dispatched_count: number;
+  cancelled_count: number;
+}

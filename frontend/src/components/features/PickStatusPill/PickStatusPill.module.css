@@ -1,0 +1,28 @@
+.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--space-3);
+    border-radius: 999px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-regular);
+    white-space: nowrap;
+    color: var(--color-text-on-surface, var(--color-text-primary));
+}
+
+.pillNotStarted {
+    background: var(--color-bg-surface-muted, #EEE);
+    color: var(--color-text-secondary);
+}
+
+.pillInProgress {
+    background: #E0E9F7;
+}
+
+.pillPicked {
+    background: rgba(193, 251, 219, 0.68);
+}
+
+.pillPartial {
+    background: #FBE7C9;
+    color: var(--color-text-primary);
+}
