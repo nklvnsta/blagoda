@@ -90,6 +90,11 @@ class BatchShipment(models.Model):
         DELIVERED  = "delivered",  "Доставлена"
         CANCELLED  = "cancelled",  "Отменена"
 
+    class PickStatus(models.TextChoices):
+        NOT_STARTED = "not_started", "Не начато"
+        PARTIAL     = "partial",     "Частично"
+        PICKED      = "picked",      "Собрано"
+
     id                    = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     batch                 = models.ForeignKey(
         Batch,
@@ -102,6 +107,7 @@ class BatchShipment(models.Model):
         related_name="batch_shipments",
     )
     quantity_shipped      = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    picked_quantity       = models.PositiveIntegerField(default=0)
     shipped_at            = models.DateTimeField(default=timezone.now)
     status                = models.CharField(
         max_length=20,
@@ -149,3 +155,17 @@ class BatchShipment(models.Model):
             self.batch.save()
 
         super().save(*args, **kwargs)
+
+    @property
+    def pick_status(self) -> str:
+        """
+        Состояние сборки строки (вычисляется из picked vs quantity_shipped):
+          - not_started  — picked == 0
+          - picked       — picked >= ordered
+          - partial      — иначе
+        """
+        if self.picked_quantity <= 0:
+            return self.PickStatus.NOT_STARTED
+        if self.picked_quantity >= self.quantity_shipped:
+            return self.PickStatus.PICKED
+        return self.PickStatus.PARTIAL

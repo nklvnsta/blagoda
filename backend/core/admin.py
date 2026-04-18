@@ -9,6 +9,8 @@ class BatchShipmentAdmin(admin.ModelAdmin):
         "batch",
         "shop",
         "quantity_shipped",
+        "picked_quantity",
+        "pick_status_display",
         "status",
         "planned_dispatch_date",
         "planned_delivery_date",
@@ -19,6 +21,10 @@ class BatchShipmentAdmin(admin.ModelAdmin):
     search_fields = ("shop__name", "batch__product__name", "note")
     date_hierarchy = "planned_dispatch_date"
     ordering = ("-planned_dispatch_date", "-shipped_at")
+
+    @admin.display(description="Сборка")
+    def pick_status_display(self, obj: BatchShipment) -> str:
+        return BatchShipment.PickStatus(obj.pick_status).label
 
 
 admin.site.register(Category)

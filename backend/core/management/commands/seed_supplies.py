@@ -46,6 +46,12 @@ class Command(BaseCommand):
             default=1,
             help="Сколько магазинов уже получили поставку сегодня (по умолчанию 1)",
         )
+        parser.add_argument(
+            "--picking-shops",
+            type=int,
+            default=8,
+            help="Сколько магазинов получат сборку на сегодня (по умолчанию 8)",
+        )
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -115,11 +121,23 @@ class Command(BaseCommand):
             positions_per_shop=(4, 10),
         )
 
+        # Сборки на сегодня для страницы «Сбор заказа»: scheduled-строки с
+        # dispatch_date = today и заранее проставленным picked_quantity,
+        # чтобы среди магазинов встретились все 4 статуса группы.
+        picking = self._create_picking_today(
+            batches=available_batches,
+            shops=random.sample(
+                shops, k=min(options["picking_shops"], len(shops))
+            ),
+            today=today,
+        )
+
         self.stdout.write(self.style.SUCCESS(
             f"\n✓ Готово:\n"
-            f"  К отгрузке завтра: {scheduled} позиций\n"
-            f"  В пути:            {in_transit} позиций\n"
-            f"  Доставлено сегодня:{delivered} позиций"
+            f"  К отгрузке завтра:   {scheduled} позиций\n"
+            f"  В пути:              {in_transit} позиций\n"
+            f"  Доставлено сегодня:  {delivered} позиций\n"
+            f"  К сборке на сегодня: {picking} позиций"
         ))
 
     # ── helpers ──────────────────────────────────────────────────────────────
@@ -174,3 +192,99 @@ class Command(BaseCommand):
                     batch.refresh_from_db(fields=["quantity_remaining"])
 
         return total_lines
+
+    def _create_picking_today(self, batches, shops, today) -> int:
+        """
+        Создаёт scheduled-строки на сегодня и проставляет picked_quantity так,
+        чтобы среди магазинов встретились все 4 статуса группы:
+          not_started / in_progress / partial / picked.
+        Распределение: ~3 not_started, ~2 picked, ~2 partial, остальные mixed.
+        """
+        if not shops or not batches:
+            return 0
+
+        if len(shops) < 4:
+            patterns = ["not_started", "picked", "partial", "in_progress"][: len(shops)]
+        else:
+            patterns = (
+                ["not_started"] * max(1, len(shops) // 3)
+                + ["picked"] * max(1, len(shops) // 4)
+                + ["partial"] * max(1, len(shops) // 4)
+            )
+            while len(patterns) < len(shops):
+                patterns.append("in_progress")
+            patterns = patterns[: len(shops)]
+        random.shuffle(patterns)
+
+        ship_at = timezone.make_aware(datetime.combine(today, time(8, 0)))
+        total_lines = 0
+
+        for shop, pattern in zip(shops, patterns):
+            lines_count = random.randint(5, 12)
+            picked_batches = random.sample(batches, k=min(lines_count, len(batches)))
+
+            created_lines: list[BatchShipment] = []
+            for batch in picked_batches:
+                if batch.quantity_remaining <= 0:
+                    continue
+                max_qty = max(1, int(batch.quantity_remaining * 0.3))
+                qty = random.randint(1, max(1, min(max_qty, batch.quantity_remaining)))
+
+                line = BatchShipment.objects.create(
+                    batch                 = batch,
+                    shop                  = shop,
+                    quantity_shipped      = qty,
+                    status                = BatchShipment.Status.SCHEDULED,
+                    planned_dispatch_date = today,
+                    planned_delivery_date = today,
+                    shipped_at            = ship_at,
+                    picked_quantity       = 0,
+                )
+                created_lines.append(line)
+
+            self._apply_pick_pattern(created_lines, pattern)
+            total_lines += len(created_lines)
+
+        return total_lines
+
+    def _apply_pick_pattern(self, lines: list, pattern: str) -> None:
+        """Заполняет picked_quantity у строк по выбранному паттерну группы."""
+        if not lines:
+            return
+
+        if pattern == "not_started":
+            # все строки picked == 0 (default), ничего не делаем
+            return
+
+        if pattern == "picked":
+            for line in lines:
+                line.picked_quantity = line.quantity_shipped
+                line.save(update_fields=["picked_quantity"])
+            return
+
+        if pattern == "partial":
+            # хотя бы одна partial-строка; остальные — random not_started/picked
+            partial_idx = random.randrange(len(lines))
+            for i, line in enumerate(lines):
+                if i == partial_idx:
+                    line.picked_quantity = max(1, line.quantity_shipped // 2)
+                else:
+                    line.picked_quantity = (
+                        line.quantity_shipped if random.random() < 0.5 else 0
+                    )
+                line.save(update_fields=["picked_quantity"])
+            return
+
+        if pattern == "in_progress":
+            # есть picked-строки и not_started-строки, но нет partial.
+            # Гарантируем хотя бы по одной такой строке.
+            picked_idx = random.randrange(len(lines))
+            for i, line in enumerate(lines):
+                if i == picked_idx:
+                    line.picked_quantity = line.quantity_shipped
+                else:
+                    line.picked_quantity = (
+                        line.quantity_shipped if random.random() < 0.5 else 0
+                    )
+                line.save(update_fields=["picked_quantity"])
+            return

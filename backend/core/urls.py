@@ -22,6 +22,13 @@ from core.views import (
     SuppliesScheduledView,
     SuppliesInTransitView,
     SuppliesTableView,
+    PickingFiltersView,
+    PickingSummaryView,
+    PickingTodayView,
+    PickingDetailView,
+    PickingItemPatchView,
+    PickingSaveView,
+    PickingDispatchView,
 )
 
 urlpatterns = [
@@ -46,4 +53,11 @@ urlpatterns = [
     path("supplies/scheduled/", SuppliesScheduledView.as_view()),
     path("supplies/in-transit/", SuppliesInTransitView.as_view()),
     path("supplies/", SuppliesTableView.as_view()),
+    path("picking/filters/", PickingFiltersView.as_view()),
+    path("picking/summary/", PickingSummaryView.as_view()),
+    path("picking/today/", PickingTodayView.as_view()),
+    path("picking/items/<uuid:item_id>/", PickingItemPatchView.as_view()),
+    path("picking/<uuid:shop_id>/save/", PickingSaveView.as_view()),
+    path("picking/<uuid:shop_id>/dispatch/", PickingDispatchView.as_view()),
+    path("picking/<uuid:shop_id>/", PickingDetailView.as_view()),
 ]
