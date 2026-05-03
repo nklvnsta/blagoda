@@ -1,6 +1,6 @@
 import { useApi } from '../../../api';
 import type { CriticalStockItem } from '../../../api/types';
-import { TargetIcon, ChevronRight } from '../../icons';
+import { TargetIcon } from '../../icons';
 import styles from './CriticalDeviationsCard.module.css';
 
 interface RowProps {
@@ -9,14 +9,16 @@ interface RowProps {
 }
 
 function DeviationRow({ variant, item }: RowProps) {
+  if (!item) return null;
+
   const isDeficit = variant === 'deficit';
   const accentClass = isDeficit ? styles.accentDeficit : styles.accentSurplus;
   const headlineClass = isDeficit ? styles.headlineDeficit : styles.headlineSurplus;
   const iconColor = isDeficit ? 'var(--color-status-critical)' : 'var(--color-status-warning)';
   const headline = isDeficit
-    ? `Дефицит ${item?.deviation_qty ?? '—'} шт. товара`
-    : `Избыток ${item?.deviation_qty ?? '—'} шт. товара`;
-  const subtitle = item ? `${item.product} — ${item.shop}` : 'Нет данных по сети';
+    ? `Дефицит ${item.deviation_qty} шт. товара`
+    : `Избыток ${item.deviation_qty} шт. товара`;
+  const subtitle = `${item.product} — ${item.shop}`;
 
   return (
     <div className={styles.row}>
@@ -29,10 +31,6 @@ function DeviationRow({ variant, item }: RowProps) {
           <p className={`${styles.headline} ${headlineClass}`}>{headline}</p>
           <p className={styles.subtitle}>{subtitle}</p>
         </div>
-        <button type="button" className={styles.action}>
-          Перейти к списку
-          <ChevronRight size={20} color="var(--color-icon-default)" />
-        </button>
       </div>
     </div>
   );
@@ -65,6 +63,10 @@ export function CriticalDeviationsCard() {
         <p className={styles.empty}>Не удалось загрузить: {error}</p>
       </div>
     );
+  }
+
+  if (!deficit && !surplus) {
+    return null;
   }
 
   return (

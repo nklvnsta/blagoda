@@ -60,9 +60,6 @@ export function ProblemProductsCard() {
         </ul>
       )}
 
-      <button type="button" className={styles.moreLink}>
-        Подробнее
-      </button>
     </section>
   );
 }
