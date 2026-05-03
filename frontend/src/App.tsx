@@ -6,6 +6,7 @@ import { ForecastPage } from './pages/ForecastPage';
 import { SuppliesPage } from './pages/SuppliesPage';
 import { PickingPage } from './pages/PickingPage';
 import { PickingDetailPage } from './pages/PickingDetailPage';
+import { ReportsPage } from './pages/ReportsPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/supplies" element={<SuppliesPage />} />
           <Route path="/picking" element={<PickingPage />} />
           <Route path="/picking/:shopId" element={<PickingDetailPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

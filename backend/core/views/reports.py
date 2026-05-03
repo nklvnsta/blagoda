@@ -1,8 +1,11 @@
 """
-GET /api/reports/<kind>/?format=xlsx|pdf&date_from=&date_to=&shop=
+GET /api/reports/<kind>/?output=xlsx|pdf&date_from=&date_to=&shop=
 
 Один диспетчер — на четыре отчёта (sales / stock / forecast / xyz).
 Возвращает файл (XLSX по умолчанию).
+
+NOTE: parameter is called "output", not "format", because DRF reserves
+the "format" query-param for its own content-negotiation.
 """
 
 from urllib.parse import quote
@@ -36,10 +39,10 @@ class ReportsView(APIView):
         if builder_cls is None:
             raise Http404(f"Неизвестный тип отчёта: {kind}")
 
-        fmt = (request.query_params.get("format") or "xlsx").lower()
+        fmt = (request.query_params.get("output") or "xlsx").lower()
         if fmt not in ALLOWED_FORMATS:
             raise ValidationError(
-                {"format": f"Допустимые значения: {list(ALLOWED_FORMATS)}"}
+                {"output": f"Допустимые значения: {list(ALLOWED_FORMATS)}"}
             )
 
         period = resolve_period(

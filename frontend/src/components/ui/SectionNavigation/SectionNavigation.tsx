@@ -14,7 +14,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'inventory', label: 'Запасы' },
   { id: 'supplies', label: 'Поставки', to: '/supplies' },
   { id: 'order-picking', label: 'Сбор заказа', to: '/picking' },
-  { id: 'reports', label: 'Отчеты' },
+  { id: 'reports', label: 'Отчеты', to: '/reports' },
 ];
 
 interface SectionNavigationProps {
