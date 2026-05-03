@@ -22,6 +22,7 @@ from .picking_today import PickingTodayView
 from .picking_detail import PickingDetailView
 from .picking_items import PickingItemPatchView
 from .picking_dispatch import PickingSaveView, PickingDispatchView
+from .reports import ReportsView
 
 __all__ = [
     "ping",
@@ -52,4 +53,5 @@ __all__ = [
     "PickingItemPatchView",
     "PickingSaveView",
     "PickingDispatchView",
+    "ReportsView",
 ]
