@@ -5,6 +5,16 @@
   width: 100%;
 }
 
+.navigation {
+  /* wrapper for SectionNavigation */
+}
+
+@media (max-width: 768px) {
+  .navigation {
+    display: none;
+  }
+}
+
 .content {
   flex: 1;
   width: 100%;

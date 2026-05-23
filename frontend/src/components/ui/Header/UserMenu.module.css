@@ -20,6 +20,29 @@
   white-space: nowrap;
 }
 
+.userPrefix {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .trigger {
+    min-width: 0;
+    max-width: 140px;
+  }
+
+  .userPrefix {
+    display: none;
+  }
+
+  .userName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .chevron {
   flex-shrink: 0;
   color: var(--color-text-primary);

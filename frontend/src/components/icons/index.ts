@@ -17,4 +17,6 @@ export { BoxStackIcon } from './BoxStackIcon';
 export { TruckIcon } from './TruckIcon';
 export { HelpCircleIcon } from './HelpCircleIcon';
 export { LogoutIcon } from './LogoutIcon';
+export { MenuIcon } from './MenuIcon';
+export { CloseIcon } from './CloseIcon';
 export type { IconProps } from './types';

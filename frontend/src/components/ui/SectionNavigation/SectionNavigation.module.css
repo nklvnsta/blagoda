@@ -30,9 +30,3 @@
   background: var(--color-brand-primary);
   color: var(--color-text-on-brand);
 }
-
-@media (max-width: 768px) {
-  .item {
-    padding: 14px 18px;
-  }
-}

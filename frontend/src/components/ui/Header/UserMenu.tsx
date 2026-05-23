@@ -54,7 +54,8 @@ export function UserMenu() {
           aria-haspopup="menu"
           onClick={() => setOpen((v) => !v)}
         >
-          <span className={styles.userName}>Пользователь: {userName}</span>
+          <span className={styles.userPrefix}>Пользователь: </span>
+          <span className={styles.userName}>{userName}</span>
           <ChevronDown size={20} className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} />
         </button>
 

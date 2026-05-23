@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import styles from './Header.module.css';
 import logoSrc from '/logo.png';
-import { BellIcon, CalendarIcon, SettingsIcon } from '../../icons';
+import { MenuIcon } from '../../icons';
+import { MobileNavDrawer } from './MobileNavDrawer';
 import { UserMenu } from './UserMenu';
 
 interface HeaderProps {
@@ -8,28 +10,32 @@ interface HeaderProps {
 }
 
 export function Header({ className }: HeaderProps) {
+  const [navOpen, setNavOpen] = useState(false);
+
   return (
-    <header className={`${styles.header} ${className ?? ''}`}>
-      <img src={logoSrc} alt="Благода" className={styles.logo} />
-      <span className={styles.title}>Оптимизация товарных потоков</span>
-
-      <div className={styles.spacer} />
-
-      <div className={styles.actions}>
-        <button className={styles.iconButton} aria-label="Уведомления">
-          <BellIcon />
+    <>
+      <header className={`${styles.header} ${className ?? ''}`}>
+        <button
+          type="button"
+          className={styles.burger}
+          aria-label="Открыть меню"
+          aria-expanded={navOpen}
+          onClick={() => setNavOpen(true)}
+        >
+          <MenuIcon size={24} />
         </button>
-        <button className={styles.iconButton} aria-label="Календарь">
-          <CalendarIcon />
-        </button>
-        <button className={styles.iconButton} aria-label="Настройки">
-          <SettingsIcon />
-        </button>
-      </div>
 
-      <div className={styles.user}>
-        <UserMenu />
-      </div>
-    </header>
+        <img src={logoSrc} alt="Благода" className={styles.logo} />
+        <span className={styles.title}>Оптимизация товарных потоков</span>
+
+        <div className={styles.spacer} />
+
+        <div className={styles.user}>
+          <UserMenu />
+        </div>
+      </header>
+
+      <MobileNavDrawer open={navOpen} onClose={() => setNavOpen(false)} />
+    </>
   );
 }
