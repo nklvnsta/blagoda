@@ -2,15 +2,16 @@
 python manage.py seed
 
 Заполняет БД тестовыми данными:
-  - 4 категории (с подкатегориями)
-  - 5 магазинов сети Благода в разных районах
-  - 20 товаров
-  - ~60 партий на складе (разные статусы, часть просроченных)
-  - ~120 отгрузок по магазинам
-  - ~18 000 записей продаж (180 дней × 20 товаров × ~5 магазинов)
-  - 100 остатков (20 товаров × 5 магазинов)
+  - 2 категории (с подкатегориями)
+  - 10 магазинов сети Благода в ПМР
+  - 30 товаров
+  - ~90 партий на складе (разные статусы, часть просроченных)
+  - ~200 отгрузок по магазинам
+  - ~54 000 записей продаж (180 дней × 30 товаров × 10 магазинов)
+  - 300 остатков (30 товаров × 10 магазинов)
   - отклонения (дефицит/избыток)
-  - ~3 000 ежедневных снимков остатков (30 дней)
+  - ~9 000 ежедневных снимков остатков (30 дней)
+  - 18 000 прогнозов (60 дней × 30 × 10), точность >75 %
 """
 
 import random
@@ -18,6 +19,8 @@ import math
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.db import models, transaction
+from django.db.models import Avg, F, FloatField
+from django.db.models.functions import Abs, Coalesce
 
 from core.models import (
     Category, Shop, Product, Batch, BatchShipment,
@@ -31,89 +34,138 @@ from core.models import (
 CATEGORIES = [
     {
         "name": "Молочные продукты",
-        "children": ["Молоко", "Кефир и йогурты", "Сыры", "Масло и сметана"],
+        "children": ["Молоко", "Кефир и йогурты", "Сыры", "Масло и сметана", "Творог"],
     },
     {
         "name": "Мясо и птица",
-        "children": ["Говядина", "Свинина", "Курица", "Полуфабрикаты"],
-    },
-    {
-        "name": "Хлеб и выпечка",
-        "children": ["Хлеб", "Булочки и сдоба"],
-    },
-    {
-        "name": "Напитки",
-        "children": ["Соки", "Вода", "Газированные напитки"],
+        "children": ["Колбасные изделия", "Курица", "Полуфабрикаты", "Консервы"],
     },
 ]
 
 SHOPS = [
     {
-        "name": "Благода на Ленина",
-        "address": "ул. Ленина, 12",
-        "latitude": 47.2213,
-        "longitude": 38.9025,
+        "name": "Благода Тирасполь, Юности",
+        "address": "Тирасполь, ул. Юности 53",
+        "latitude": 46.8480,
+        "longitude": 29.6280,
         "normative_days": 3,
     },
     {
-        "name": "Благода Центральный",
-        "address": "пр. Победы, 45",
-        "latitude": 47.2357,
-        "longitude": 38.8960,
-        "normative_days": 4,
-    },
-    {
-        "name": "Благода на Садовой",
-        "address": "ул. Садовая, 78",
-        "latitude": 47.2108,
-        "longitude": 38.9142,
+        "name": "Благода Тирасполь, Центральный рынок",
+        "address": "Тирасполь, центральный рынок",
+        "latitude": 46.8550,
+        "longitude": 29.6350,
         "normative_days": 2,
     },
     {
-        "name": "Благода Северный",
-        "address": "ул. Северная, 3",
-        "latitude": 47.2501,
-        "longitude": 38.9080,
+        "name": "Благода Тирасполь, Каховская",
+        "address": "Тирасполь, ул. Каховская 4/1",
+        "latitude": 46.8420,
+        "longitude": 29.6200,
         "normative_days": 3,
     },
     {
-        "name": "Благода на Мира",
-        "address": "пр. Мира, 22",
-        "latitude": 47.2190,
-        "longitude": 38.8870,
-        "normative_days": 5,
+        "name": "Благода Бендеры, Победы",
+        "address": "Бендеры, ул. Победы 1",
+        "latitude": 46.8310,
+        "longitude": 29.4770,
+        "normative_days": 3,
+    },
+    {
+        "name": "Благода Бендеры, Центральный рынок",
+        "address": "Бендеры, Центральный рынок",
+        "latitude": 46.8350,
+        "longitude": 29.4820,
+        "normative_days": 2,
+    },
+    {
+        "name": "Благода Парканы, Гоголя",
+        "address": "Парканы, ул. Гоголя 1",
+        "latitude": 46.8670,
+        "longitude": 29.6330,
+        "normative_days": 4,
+    },
+    {
+        "name": "Благода Рыбница, Мичурина",
+        "address": "Рыбница, ул. Мичурина 43",
+        "latitude": 47.7660,
+        "longitude": 29.0030,
+        "normative_days": 3,
+    },
+    {
+        "name": "Благода Дубоссары, Ломоносова",
+        "address": "Дубоссары, ул. Ломоносова 43",
+        "latitude": 47.2650,
+        "longitude": 29.1670,
+        "normative_days": 3,
+    },
+    {
+        "name": "Благода Григориополь, К. Маркса",
+        "address": "Григориополь, ул. К. Маркса 172",
+        "latitude": 47.1550,
+        "longitude": 29.3000,
+        "normative_days": 4,
+    },
+    {
+        "name": "Благода Слободзея, Ленина",
+        "address": "Слободзея, ул. Ленина 103",
+        "latitude": 46.7330,
+        "longitude": 29.7000,
+        "normative_days": 3,
     },
 ]
 
 # (name, unit, price, shelf_life_days, category, avg_sales_per_day)
 PRODUCTS = [
     # Молочные
-    ("Молоко 3.2% Простоквашино 1л",   "l",    89.90,  7,   "Молоко",              25),
-    ("Молоко 2.5% Домик в деревне 1л", "l",    79.90,  7,   "Молоко",              20),
-    ("Кефир 2.5% Активиа 500г",        "g",    65.00,  14,  "Кефир и йогурты",     15),
-    ("Йогурт клубника Danone 150г",    "g",    55.50,  21,  "Кефир и йогурты",     18),
-    ("Сыр Российский 45% кг",          "kg",  490.00,  90,  "Сыры",                 5),
-    ("Масло сливочное 82.5% 200г",     "g",   130.00,  60,  "Масло и сметана",      8),
-    ("Сметана 20% 400г",               "g",    75.00,  21,  "Масло и сметана",     12),
-    # Мясо
-    ("Фарш говяжий охл. 500г",         "g",   245.00,  3,   "Говядина",            10),
-    ("Стейк из говядины охл. 300г",    "g",   380.00,  5,   "Говядина",             4),
-    ("Свинина шея охл. кг",            "kg",  320.00,  5,   "Свинина",              6),
-    ("Куриное филе охл. кг",           "kg",  280.00,  5,   "Курица",              14),
-    ("Куриные крылья охл. кг",         "kg",  180.00,  4,   "Курица",               8),
-    ("Пельмени Сибирские 900г",        "g",   210.00,  180, "Полуфабрикаты",        7),
-    # Хлеб
-    ("Хлеб Бородинский 400г",          "g",    45.00,  5,   "Хлеб",               30),
-    ("Батон нарезной 400г",            "g",    38.00,  3,   "Хлеб",               25),
-    ("Булочка сдобная 80г",            "g",    22.00,  2,   "Булочки и сдоба",    20),
-    # Напитки
-    ("Сок яблочный Rich 1л",           "l",    95.00,  365, "Соки",                 6),
-    ("Вода Святой Источник 1.5л",      "l",    55.00,  730, "Вода",                15),
-    ("Вода Черноголовка газ. 1л",      "l",    65.00,  365, "Газированные напитки", 10),
-    ("Сок апельсиновый Tropicana 1л",  "l",   110.00,  365, "Соки",                 5),
+    ("Молоко Благода пастер. 2.5% 1л пак.",          "l",   72.00,   7,  "Молоко",              24),
+    ("Молоко Благода пастер. 3.2% 1л пак.",          "l",   75.00,   7,  "Молоко",              26),
+    ("Кефир Благода 2.5% 1л пак.",                   "l",   68.00,  14,  "Кефир и йогурты",     20),
+    ("Ряженка Благода 2.5% 500мл пак.",              "g",   58.00,  14,  "Кефир и йогурты",     14),
+    ("Сметана Благода 15% 200г стак.",               "g",   62.00,  21,  "Масло и сметана",     14),
+    ("Сметана Благода 20% 500г пак.",                "g",   95.00,  21,  "Масло и сметана",     12),
+    ("Творог Благода 9% 200г",                       "g",   88.00,  14,  "Творог",              11),
+    ("Йогурт Благода 2.8% Клубника 150г стак.",      "g",   52.00,  21,  "Кефир и йогурты",     16),
+    ("Йогурт Благода питьев 2.8% Персик 400мл пак.", "g",   78.00,  21,  "Кефир и йогурты",     13),
+    ("Сыр Благода Российский 50%, кг",               "kg", 520.00,  60,  "Сыры",                 6),
+    ("Сыр Благода Гауда 45%, кг",                    "kg", 480.00,  60,  "Сыры",                 5),
+    ("Сыр Брынза Благода 250г",                      "g",  145.00,  45,  "Сыры",                 7),
+    # Колбасные изделия
+    ("Колбаса Докторская в/с, кг",                   "kg", 320.00,  10,  "Колбасные изделия",    8),
+    ("Колбаса Молочная вареная в/с, кг",             "kg", 340.00,  10,  "Колбасные изделия",    9),
+    ("Колбаса Краковская п/к в/с, кг",               "kg", 420.00,  14,  "Колбасные изделия",    7),
+    ("Колбаса Сервелат Финский п/к 1с, кг",          "kg", 510.00,  21,  "Колбасные изделия",    6),
+    ("Колбаса Пеперони с/к, кг",                     "kg", 580.00,  30,  "Колбасные изделия",    5),
+    ("Колбаса Московская в/к в/с, кг",               "kg", 460.00,  21,  "Колбасные изделия",    6),
+    ("Сосиски Докторские в/с, кг",                   "kg", 310.00,  10,  "Колбасные изделия",   10),
+    ("Сосиски Баварские с сыром 1с, кг",             "kg", 390.00,  14,  "Колбасные изделия",    8),
+    ("Сардельки Докторские в/с, кг",                 "kg", 280.00,  10,  "Колбасные изделия",    9),
+    # Курица
+    ("Бедро куриное Благода охлажд, кг",             "kg", 195.00,   5,  "Курица",              12),
+    ("Голень куриная подложка, кг",                  "kg", 165.00,   5,  "Курица",              10),
+    ("Филе куриное Благода заморож., кг",            "kg", 285.00, 180,  "Курица",              14),
+    # Полуфабрикаты
+    ("Пельмени Классические 900г",                  "g",  245.00, 180,  "Полуфабрикаты",        9),
+    ("Пельмени Куриные 450г",                         "g",  165.00, 180,  "Полуфабрикаты",        8),
+    ("Вареники с картофелем 600г",                   "g",  135.00, 180,  "Полуфабрикаты",        7),
+    ("Вареники с творогом 600г",                     "g",  145.00, 180,  "Полуфабрикаты",        6),
+    ("Котлета куриная заморож, кг",                  "kg", 220.00, 180,  "Полуфабрикаты",       11),
+    # Консервы
+    ("Говядина тушеная ГОСТ 338г ж/б",               "g",  185.00, 730,  "Консервы",             4),
 ]
 
 SALES_PERIOD_DAYS = 180
+FORECAST_DAYS = 60
+FORECAST_NOISE = 0.05
+SALES_NOISE_STDEV = 0.18
+ROLLING_WINDOW_DAYS = 30
+
+WEEKDAY_FACTORS = [1.0, 0.95, 1.0, 1.05, 1.1, 1.2, 1.15]
+
+
+def _shop_factor(product_sku: str, shop_name: str) -> float:
+    rng = random.Random(hash((product_sku, shop_name)) % (2**32))
+    return rng.uniform(0.6, 1.4)
 
 
 class Command(BaseCommand):
@@ -128,6 +180,8 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        random.seed(42)
+
         if options["clear"]:
             self.stdout.write("Очищаем таблицы...")
             ForecastEntry.objects.all().delete()
@@ -148,17 +202,30 @@ class Command(BaseCommand):
         products   = self._seed_products(categories)
         batches    = self._seed_batches(products)
         self._seed_shipments(batches, shops)
-        sales_and_receipts = self._seed_sales(products, shops)
+        self._seed_sales(products, shops)
         inventories = self._seed_inventory(products, shops)
         self._seed_deviations(inventories)
         self._seed_snapshots(products, shops)
         self._seed_forecasts(products, shops)
 
+        accuracy_pct = self._verify_forecast_accuracy(min_pct=75.0)
+        if accuracy_pct < 75.0:
+            self.stdout.write(self.style.WARNING(
+                f"  Точность {accuracy_pct}% ниже 75%, пересчитываем прогнозы с меньшим шумом..."
+            ))
+            for noise in (0.03, 0.01, 0.0):
+                random.seed(42)
+                self._recalculate_forecast_predictions(products, shops, noise_stdev=noise)
+                accuracy_pct = self._verify_forecast_accuracy(min_pct=75.0)
+                if accuracy_pct >= 75.0:
+                    break
+
         self.stdout.write(self.style.SUCCESS(
             f"\n✓ Готово: {len(categories)} категорий, {len(shops)} магазинов, "
             f"{len(products)} товаров, {Batch.objects.count()} партий, "
             f"{Receipt.objects.count()} чеков, {Sales.objects.count()} продаж, "
-            f"{len(inventories)} остатков, {ForecastEntry.objects.count()} прогнозов"
+            f"{len(inventories)} остатков, {ForecastEntry.objects.count()} прогнозов, "
+            f"точность прогноза {accuracy_pct}%"
         ))
 
     # ── Категории ────────────────────────────────────────────────────────────
@@ -307,38 +374,35 @@ class Command(BaseCommand):
     def _seed_sales(self, products, shops):
         self.stdout.write("Создаём продажи (180 дней) и чеки...")
         today = date.today()
-        sales_data = []  # (product, shop, quantity, date, price_at_sale)
-        
+        sales_data = []
+
         avg_sales_map = {
             p.sku: PRODUCTS[i][5]
             for i, p in enumerate(products)
         }
 
-        # Первый проход: собираем данные по продажам
         for product in products:
             base = avg_sales_map.get(product.sku, 10)
 
             for shop in shops:
-                shop_factor = random.uniform(0.6, 1.4)
+                shop_factor = _shop_factor(product.sku, shop.name)
 
                 for day_offset in range(SALES_PERIOD_DAYS):
                     d = today - timedelta(days=day_offset)
 
-                    weekday_factor = 1.2 if d.weekday() >= 5 else 1.0
+                    weekday_factor = WEEKDAY_FACTORS[d.weekday()]
                     seasonal = 1.0 + 0.15 * math.sin(2 * math.pi * d.timetuple().tm_yday / 365)
                     trend = 1.0 + 0.0005 * (SALES_PERIOD_DAYS - day_offset)
 
                     mean = base * shop_factor * weekday_factor * seasonal * trend
-                    qty  = max(0, int(random.gauss(mean, mean * 0.25)))
+                    qty  = max(0, int(random.gauss(mean, mean * SALES_NOISE_STDEV)))
 
                     if qty > 0:
-                        price_at_sale = product.price
-                        sales_data.append((product, shop, qty, d, price_at_sale))
+                        sales_data.append((product, shop, qty, d, product.price))
 
-        # Группируем продажи по дате и магазину для создания чеков
         from collections import defaultdict
         receipts_by_shop_date = defaultdict(list)
-        
+
         for product, shop, qty, d, price_at_sale in sales_data:
             receipts_by_shop_date[(shop.id, d)].append({
                 'product': product,
@@ -348,27 +412,22 @@ class Command(BaseCommand):
                 'date': d,
             })
 
-        # Создаём чеки - по одному на день на магазин (можно разделить)
         receipts_list = []
-        sales_list = []
-        receipt_map = {}  # Ключ: (shop_id, date) -> Receipt ID
-        
+
         for (shop_id, sale_date), sales_in_group in receipts_by_shop_date.items():
-            # Разделяем на несколько чеков в зависимости от количества товаров
             items_per_receipt = max(1, random.randint(3, 8))
             current_receipt_items = []
-            
+
             for sale_item in sales_in_group:
                 current_receipt_items.append(sale_item)
-                
+
                 if len(current_receipt_items) >= items_per_receipt or sale_item == sales_in_group[-1]:
-                    # Создаём чек для накопленных товаров
                     total_amount = sum(
                         float(item['price_at_sale'] * item['quantity'])
                         for item in current_receipt_items
                     )
                     total_qty = sum(item['quantity'] for item in current_receipt_items)
-                    
+
                     receipt = Receipt(
                         shop_id=shop_id,
                         total_amount=total_amount,
@@ -378,15 +437,12 @@ class Command(BaseCommand):
                     receipts_list.append((receipt, current_receipt_items))
                     current_receipt_items = []
 
-        # Создаём все чеки
         receipt_objects = [r[0] for r in receipts_list]
         Receipt.objects.bulk_create(receipt_objects, batch_size=200)
-        
-        # Получаем созданные чеки с ID и создаём продажи
+
         created_receipts = Receipt.objects.filter(shop__in=shops).order_by('-created_at')[:len(receipt_objects)]
         receipt_list = list(created_receipts)
-        
-        # Создаём продажи со связью на чеки
+
         sales_list = []
         receipt_idx = 0
         for receipt in receipt_list:
@@ -404,9 +460,9 @@ class Command(BaseCommand):
                 receipt_idx += 1
 
         Sales.objects.bulk_create(sales_list, batch_size=500)
-        
+
         self.stdout.write(f"  → {len(receipt_list)} чеков, {len(sales_list)} записей продаж")
-        
+
         return (sales_list, receipt_list)
 
     # ── Остатки (Inventory) ──────────────────────────────────────────────────
@@ -419,15 +475,13 @@ class Command(BaseCommand):
             base_avg = PRODUCTS[i][5]
 
             for shop in shops:
-                shop_avg = base_avg * random.uniform(0.7, 1.3)
+                shop_avg = base_avg * _shop_factor(product.sku, shop.name)
                 safety   = random.choice([2, 3, 4])
                 cycle    = random.choice([5, 7, 10])
 
                 min_stock = int(shop_avg * safety)
                 max_stock = int(shop_avg * (safety + cycle))
 
-                # Текущий остаток: в большинстве случаев нормальный,
-                # но иногда дефицит или избыток
                 roll = random.random()
                 if roll < 0.15:
                     current_qty = random.randint(0, max(1, min_stock - 1))
@@ -518,46 +572,71 @@ class Command(BaseCommand):
 
     # ── Прогнозы (ForecastEntry) ───────────────────────────────────────────
 
-    FORECAST_DAYS = 60
+    def _build_sales_index(self, days_back: int) -> dict[tuple, int]:
+        today = date.today()
+        sales_index: dict[tuple, int] = {}
+        for sale in Sales.objects.filter(
+            date__gte=today - timedelta(days=days_back),
+        ).values("product_id", "shop_id", "date").annotate(
+            total=models.Sum("quantity"),
+        ):
+            sales_index[(sale["product_id"], sale["shop_id"], sale["date"])] = sale["total"]
+        return sales_index
+
+    def _rolling_avg(
+        self,
+        sales_index: dict[tuple, int],
+        product_id,
+        shop_id,
+        d: date,
+        fallback: float,
+    ) -> float:
+        total = sum(
+            sales_index.get((product_id, shop_id, d - timedelta(days=i)), 0)
+            for i in range(1, ROLLING_WINDOW_DAYS + 1)
+        )
+        if total == 0:
+            return fallback
+        return total / ROLLING_WINDOW_DAYS
+
+    def _predict_qty(
+        self,
+        rolling_avg: float,
+        weekday: int,
+        noise_stdev: float,
+    ) -> int:
+        wf = WEEKDAY_FACTORS[weekday]
+        return max(1, int(rolling_avg * wf * random.gauss(1.0, noise_stdev)))
 
     def _seed_forecasts(self, products, shops):
         """
         Генерируем прогнозы за последние FORECAST_DAYS дней.
-        Формула прогноза: avg(продаж за предыдущие 30 дней) × weekday_factor.
-        Фактические продажи берутся из Sales.
-        Целевая точность ~88–92 %.
+        Формула: avg(продаж за предыдущие 30 дней) × weekday_factor × шум.
+        Фактические продажи берутся из Sales. Целевая точность >75 %.
         """
-        self.stdout.write(f"Создаём прогнозы ({self.FORECAST_DAYS} дней)...")
+        self.stdout.write(f"Создаём прогнозы ({FORECAST_DAYS} дней)...")
         today = date.today()
 
-        actual_map: dict[tuple, int] = {}
-        for sale in Sales.objects.filter(
-            date__gte=today - timedelta(days=self.FORECAST_DAYS),
-        ).values("product_id", "shop_id", "date").annotate(
-            total=models.Sum("quantity"),
-        ):
-            actual_map[(sale["product_id"], sale["shop_id"], sale["date"])] = sale["total"]
+        sales_index = self._build_sales_index(FORECAST_DAYS + ROLLING_WINDOW_DAYS)
 
         avg_sales_map = {
             p.sku: PRODUCTS[i][5]
             for i, p in enumerate(products)
         }
 
-        weekday_factors = [1.0, 0.95, 1.0, 1.05, 1.1, 1.2, 1.15]
-
         rows = []
         for product in products:
             base = avg_sales_map.get(product.sku, 10)
             for shop in shops:
-                shop_factor = random.uniform(0.7, 1.3)
+                fallback = base * _shop_factor(product.sku, shop.name)
 
-                for day_offset in range(self.FORECAST_DAYS):
+                for day_offset in range(FORECAST_DAYS):
                     d = today - timedelta(days=day_offset)
-                    wf = weekday_factors[d.weekday()]
-
-                    predicted = max(1, int(base * shop_factor * wf * random.gauss(1.0, 0.08)))
-
-                    actual = actual_map.get((product.pk, shop.pk, d))
+                    rolling_avg = self._rolling_avg(
+                        sales_index, product.pk, shop.pk, d, fallback,
+                    )
+                    predicted = self._predict_qty(rolling_avg, d.weekday(), FORECAST_NOISE)
+                    actual = sales_index.get((product.pk, shop.pk, d))
 
                     rows.append(ForecastEntry(
                         product=product,
@@ -569,3 +648,47 @@ class Command(BaseCommand):
 
         ForecastEntry.objects.bulk_create(rows, batch_size=500, ignore_conflicts=True)
         self.stdout.write(f"  → {len(rows)} прогнозов")
+
+    def _recalculate_forecast_predictions(self, products, shops, noise_stdev: float):
+        today = date.today()
+        sales_index = self._build_sales_index(FORECAST_DAYS + ROLLING_WINDOW_DAYS)
+
+        avg_sales_map = {
+            p.sku: PRODUCTS[i][5]
+            for i, p in enumerate(products)
+        }
+
+        to_update = []
+        for entry in ForecastEntry.objects.select_related("product", "shop").filter(
+            date__gte=today - timedelta(days=FORECAST_DAYS),
+        ):
+            base = avg_sales_map.get(entry.product.sku, 10)
+            fallback = base * _shop_factor(entry.product.sku, entry.shop.name)
+            rolling_avg = self._rolling_avg(
+                sales_index, entry.product_id, entry.shop_id, entry.date, fallback,
+            )
+            entry.predicted_qty = self._predict_qty(rolling_avg, entry.date.weekday(), noise_stdev)
+            to_update.append(entry)
+
+        ForecastEntry.objects.bulk_update(to_update, ["predicted_qty"], batch_size=500)
+        self.stdout.write(f"  → пересчитано {len(to_update)} прогнозов (шум σ={noise_stdev})")
+
+    def _verify_forecast_accuracy(self, min_pct: float = 75.0) -> float:
+        result = ForecastEntry.objects.filter(
+            actual_qty__isnull=False,
+            actual_qty__gt=0,
+        ).aggregate(
+            mean_error=Coalesce(
+                Avg(
+                    Abs(F("actual_qty") - F("predicted_qty")) * 1.0 / F("actual_qty"),
+                    output_field=FloatField(),
+                ),
+                0.0,
+                output_field=FloatField(),
+            ),
+        )
+        mean_error = result["mean_error"] or 0.0
+        accuracy_pct = round(max(0.0, (1.0 - mean_error)) * 100, 1)
+        style = self.style.SUCCESS if accuracy_pct >= min_pct else self.style.WARNING
+        self.stdout.write(style(f"  → Точность прогноза: {accuracy_pct}%"))
+        return accuracy_pct
