@@ -106,7 +106,18 @@
 }
 
 .actionPdf:hover {
-    text-decoration: none;
+  text-decoration: none;
+}
+
+.action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.actionPdf:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 

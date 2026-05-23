@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { getAuthHeaders } from '../auth/authStorage';
+import { handleUnauthorized } from '../auth/AuthContext';
 import { API_BASE } from './config';
 
 interface UseApiResult<T> {
@@ -26,8 +28,12 @@ export function useApi<T>(path: string, params?: Record<string, string | undefin
     setLoading(true);
     setError(null);
 
-    fetch(url)
+    fetch(url, { headers: getAuthHeaders() })
       .then((res) => {
+        if (res.status === 401) {
+          handleUnauthorized();
+          throw new Error('HTTP 401');
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })

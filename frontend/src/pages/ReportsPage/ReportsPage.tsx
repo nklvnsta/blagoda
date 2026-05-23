@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { API_BASE } from '../../api';
+import { getAuthHeaders } from '../../auth/authStorage';
+import { handleUnauthorized } from '../../auth/AuthContext';
 import styles from './ReportsPage.module.css';
 
 type ReportKind = 'sales' | 'stock' | 'forecast' | 'xyz';
@@ -33,11 +36,46 @@ const REPORTS: ReportCardData[] = [
   },
 ];
 
-function reportUrl(kind: ReportKind, output: OutputFormat): string {
-  return `${API_BASE}/reports/${kind}/?output=${output}`;
+async function downloadReport(kind: ReportKind, output: OutputFormat) {
+  const url = `${API_BASE}/reports/${kind}/?output=${output}`;
+  const res = await fetch(url, { headers: getAuthHeaders() });
+
+  if (res.status === 401) {
+    handleUnauthorized();
+    throw new Error('HTTP 401');
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const match = disposition.match(/filename="(.+?)"/);
+  const filename = match?.[1] ?? `${kind}.${output}`;
+
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(blobUrl);
 }
 
 function ReportCard({ kind, title, description }: ReportCardData) {
+  const [loading, setLoading] = useState<OutputFormat | null>(null);
+
+  const handleDownload = async (output: OutputFormat) => {
+    if (loading) return;
+    setLoading(output);
+    try {
+      await downloadReport(kind, output);
+    } catch {
+      alert('Не удалось сформировать отчёт');
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.info}>
@@ -48,22 +86,22 @@ function ReportCard({ kind, title, description }: ReportCardData) {
         <p className={styles.description}>{description}</p>
       </div>
       <div className={styles.actions}>
-        <a
+        <button
+          type="button"
           className={styles.action}
-          href={reportUrl(kind, 'xlsx')}
-          target="_blank"
-          rel="noopener noreferrer"
+          disabled={loading !== null}
+          onClick={() => handleDownload('xlsx')}
         >
-          Скачать Excel
-        </a>
-        <a
+          {loading === 'xlsx' ? 'Формируется…' : 'Скачать Excel'}
+        </button>
+        <button
+          type="button"
           className={styles.actionPdf}
-          href={reportUrl(kind, 'pdf')}
-          target="_blank"
-          rel="noopener noreferrer"
+          disabled={loading !== null}
+          onClick={() => handleDownload('pdf')}
         >
-          Скачать PDF
-        </a>
+          {loading === 'pdf' ? 'Формируется…' : 'Скачать PDF'}
+        </button>
       </div>
     </div>
   );

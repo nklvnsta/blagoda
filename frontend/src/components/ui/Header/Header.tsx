@@ -1,13 +1,13 @@
 import styles from './Header.module.css';
 import logoSrc from '/logo.png';
 import { BellIcon, CalendarIcon, SettingsIcon } from '../../icons';
+import { UserMenu } from './UserMenu';
 
 interface HeaderProps {
   className?: string;
-  userName?: string;
 }
 
-export function Header({ className, userName = 'Николаева А. И.' }: HeaderProps) {
+export function Header({ className }: HeaderProps) {
   return (
     <header className={`${styles.header} ${className ?? ''}`}>
       <img src={logoSrc} alt="Благода" className={styles.logo} />
@@ -28,7 +28,7 @@ export function Header({ className, userName = 'Николаева А. И.' }: H
       </div>
 
       <div className={styles.user}>
-        <span className={styles.userName}>Пользователь: {userName}</span>
+        <UserMenu />
       </div>
     </header>
   );

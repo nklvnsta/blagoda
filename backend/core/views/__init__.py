@@ -23,6 +23,7 @@ from .picking_detail import PickingDetailView
 from .picking_items import PickingItemPatchView
 from .picking_dispatch import PickingSaveView, PickingDispatchView
 from .reports import ReportsView
+from .auth import LoginView, RefreshView, MeView
 
 __all__ = [
     "ping",
@@ -54,4 +55,7 @@ __all__ = [
     "PickingSaveView",
     "PickingDispatchView",
     "ReportsView",
+    "LoginView",
+    "RefreshView",
+    "MeView",
 ]

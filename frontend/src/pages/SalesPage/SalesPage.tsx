@@ -41,7 +41,7 @@ export function SalesPage() {
         <StatCard
           title="Выручка"
           value={salesData.data ? String(salesData.data.revenue) : '—'}
-          unit={salesData.data?.quantity_unit}
+          unit="₽"
           loading={salesData.loading}
         />
         <StatCard

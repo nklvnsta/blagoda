@@ -30,9 +30,15 @@ from core.views import (
     PickingSaveView,
     PickingDispatchView,
     ReportsView,
+    LoginView,
+    RefreshView,
+    MeView,
 )
 
 urlpatterns = [
+    path("auth/login/", LoginView.as_view(), name="auth-login"),
+    path("auth/refresh/", RefreshView.as_view(), name="auth-refresh"),
+    path("auth/me/", MeView.as_view(), name="auth-me"),
     path("ping/", ping),
     path("sales/filters/", SalesFiltersView.as_view()),
     path("sales/summary/", SalesSummaryView.as_view()),

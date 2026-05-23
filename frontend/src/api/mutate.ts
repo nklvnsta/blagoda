@@ -1,3 +1,5 @@
+import { getAuthHeaders } from '../auth/authStorage';
+import { handleUnauthorized } from '../auth/AuthContext';
 import { API_BASE } from './config';
 
 export type MutateMethod = 'POST' | 'PATCH' | 'PUT' | 'DELETE';
@@ -9,9 +11,17 @@ export async function apiMutate<TResponse, TBody = unknown>(
 ): Promise<TResponse> {
   const res = await fetch(`${API_BASE}${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
+  if (res.status === 401) {
+    handleUnauthorized();
+    throw new Error('HTTP 401');
+  }
 
   if (!res.ok) {
     let detail = '';

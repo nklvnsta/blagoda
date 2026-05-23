@@ -1,0 +1,260 @@
+.page {
+  display: grid;
+  grid-template-columns: 0.7fr 1fr;
+  min-height: 100dvh;
+  background: #f8f4f1;
+}
+
+.infoPanel {
+  background: #e7e3e0;
+  padding: 40px 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  width: 137px;
+  height: 42px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.infoTitle {
+  margin: 84px 0 0;
+  font-size: 36px;
+  font-weight: var(--font-weight-black);
+  color: #303030;
+  line-height: normal;
+  max-width: 516px;
+}
+
+.infoDescription {
+  margin: 32px 0 0;
+  font-size: 20px;
+  font-weight: var(--font-weight-regular);
+  color: #303030;
+  line-height: normal;
+  max-width: 516px;
+}
+
+.features {
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  padding-top: 48px;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  color: #303030;
+}
+
+.featureIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #303030;
+}
+
+.featureLabel {
+  font-size: 18px;
+  font-weight: var(--font-weight-regular);
+  color: #303030;
+  white-space: nowrap;
+}
+
+.infoNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 48px;
+}
+
+.noteIcon {
+  flex-shrink: 0;
+  color: #5c5555;
+  margin-top: 2px;
+}
+
+.noteText {
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  color: #5c5555;
+  line-height: normal;
+}
+
+.formPanel {
+  display: flex;
+  justify-content: center;
+  padding: 60px 40px;
+  background: #f8f4f1;
+}
+
+.formCard {
+  width: 100%;
+  margin-top: 84px;
+  max-width: 516px;
+}
+
+.formTitle {
+  margin: 0;
+  font-size: 30px;
+  font-weight: var(--font-weight-bold);
+  color: #303030;
+}
+
+.formSubtitle {
+  margin: 18px 0 0;
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  color: #5c5555;
+}
+
+.form {
+  margin-top: 49px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  font-size: 24px;
+  font-weight: var(--font-weight-bold);
+  color: #303030;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c5555;
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  height: 45px;
+  padding: 0 44px 0 42px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  color: #303030;
+  background: var(--color-bg-surface);
+  border: 1px solid #5c5555;
+  border-radius: 5px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #303030;
+}
+
+.input::placeholder {
+  color: #5c5555;
+}
+
+.togglePassword {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #5c5555;
+  cursor: pointer;
+}
+
+.submit {
+  margin-top: 8px;
+  width: 100%;
+  height: 45px;
+  border: none;
+  border-radius: 5px;
+  background: #303030;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.submit:hover {
+  filter: brightness(0.92);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-status-negative);
+}
+
+.help {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  color: #5c5555;
+}
+
+.helpIcon {
+  flex-shrink: 0;
+  color: #5c5555;
+}
+
+@media (max-width: 900px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .infoPanel {
+    padding: 32px 24px;
+  }
+
+  .infoTitle {
+    margin-top: 32px;
+    font-size: 28px;
+  }
+
+  .features {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .formCard {
+    margin-top: 0px;
+  }
+
+  .formPanel {
+    padding: 32px 24px 48px;
+  }
+}
