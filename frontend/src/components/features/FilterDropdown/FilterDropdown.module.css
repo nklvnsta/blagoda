@@ -97,3 +97,32 @@
   .selected {
     background: var(--color-bg-chip);
   }
+
+  @media (max-width: 768px) {
+    .wrapper {
+      width: 100%;
+    }
+
+    .control {
+      width: 100%;
+    }
+
+    .valueBlock {
+      flex: 1;
+      min-width: 0;
+      justify-content: flex-end;
+    }
+
+    .value {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .menu {
+      right: 0;
+      left: 0;
+      min-width: 0;
+      width: 100%;
+    }
+  }

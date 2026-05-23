@@ -122,3 +122,20 @@
     font-weight: var(--font-weight-regular);
     color: var(--color-text-primary);
 }
+
+@media (max-width: 768px) {
+    .wrapper {
+        padding: 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .headerInner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+}
