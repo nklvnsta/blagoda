@@ -5,8 +5,6 @@ import { ChevronDown } from '../../icons';
 import { LogoutConfirmModal } from '../LogoutConfirmModal';
 import styles from './UserMenu.module.css';
 
-const PLACEHOLDER_ROLE = '—';
-
 export function UserMenu() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -15,6 +13,7 @@ export function UserMenu() {
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   const userName = user?.display_name ?? '—';
+  const roleLabel = user?.role_label ?? '—';
 
   useEffect(() => {
     if (!open) return;
@@ -63,7 +62,7 @@ export function UserMenu() {
           <div className={styles.dropdown} role="menu">
             <div className={styles.userInfo}>
               <span className={styles.infoName}>{userName}</span>
-              <span className={styles.infoRole}>Роль: {PLACEHOLDER_ROLE}</span>
+              <span className={styles.infoRole}>Роль: {roleLabel}</span>
             </div>
             <button
               type="button"

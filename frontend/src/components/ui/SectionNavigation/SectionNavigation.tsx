@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { NAVIGATION_ITEMS } from '../../../navigation/items';
+import { useAuth } from '../../../auth/AuthContext';
+import { getNavigationItems } from '../../../navigation/items';
 import styles from './SectionNavigation.module.css';
 
 interface SectionNavigationProps {
@@ -7,13 +8,16 @@ interface SectionNavigationProps {
 }
 
 export function SectionNavigation({ className }: SectionNavigationProps) {
+  const { user } = useAuth();
+  const items = user ? getNavigationItems(user.role) : [];
+
   return (
     <nav
       aria-label="Основная навигация"
       className={`${styles.navigation} ${className ?? ''}`}
     >
       <ul className={styles.list}>
-        {NAVIGATION_ITEMS.map((item) => (
+        {items.map((item) => (
           <li key={item.id} className={styles.listItem}>
             {item.to ? (
               <NavLink

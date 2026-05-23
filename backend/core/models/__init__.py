@@ -6,6 +6,7 @@ from .inventory import Inventory, StockDeviation, InventorySnapshot
 from .sales import Sales
 from .forecast import ForecastEntry
 from .receipt import Receipt
+from .user_profile import UserProfile, UserRole
 
 __all__ = [
     "Category",
@@ -19,4 +20,6 @@ __all__ = [
     "Sales",
     "ForecastEntry",
     "Receipt",
+    "UserProfile",
+    "UserRole",
 ]

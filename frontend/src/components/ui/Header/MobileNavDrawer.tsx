@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../../auth/AuthContext';
 import { CloseIcon } from '../../icons';
-import { NAVIGATION_ITEMS } from '../../../navigation/items';
+import { getNavigationItems } from '../../../navigation/items';
 import styles from './MobileNavDrawer.module.css';
 
 interface MobileNavDrawerProps {
@@ -10,6 +11,9 @@ interface MobileNavDrawerProps {
 }
 
 export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
+  const { user } = useAuth();
+  const items = user ? getNavigationItems(user.role) : [];
+
   useEffect(() => {
     if (!open) return;
 
@@ -53,7 +57,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
           </button>
         </div>
         <ul className={styles.list}>
-          {NAVIGATION_ITEMS.map((item) => (
+          {items.map((item) => (
             <li key={item.id} className={styles.listItem}>
               {item.to ? (
                 <NavLink

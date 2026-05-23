@@ -2,10 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { API_BASE } from '../api/config';
 import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from './authStorage';
 
+export type UserRole = 'admin' | 'logist' | 'picker';
+
 export interface AuthUser {
   id: number;
   username: string;
   display_name: string;
+  role: UserRole;
+  role_label: string;
 }
 
 interface LoginResponse {
@@ -18,7 +22,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<AuthUser>;
   logout: () => void;
 }
 
@@ -96,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true; };
   }, []);
 
-  const login = useCallback(async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string): Promise<AuthUser> => {
     const res = await fetch(`${API_BASE}/auth/login/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -110,6 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = (await res.json()) as LoginResponse;
     saveTokens({ access: data.access, refresh: data.refresh });
     setUser(data.user);
+    return data.user;
   }, []);
 
   const value = useMemo<AuthContextValue>(

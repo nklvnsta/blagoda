@@ -1,6 +1,33 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.contrib.auth.models import User
 
-from .models import Category, Shop, Product, Batch, BatchShipment, Inventory, StockDeviation, InventorySnapshot, Sales
+from .models import (
+    Category,
+    Shop,
+    Product,
+    Batch,
+    BatchShipment,
+    Inventory,
+    StockDeviation,
+    InventorySnapshot,
+    Sales,
+    UserProfile,
+)
+
+
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    extra = 0
+
+
+class UserAdmin(DjangoUserAdmin):
+    inlines = (UserProfileInline,)
+
+
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
 
 
 @admin.register(BatchShipment)

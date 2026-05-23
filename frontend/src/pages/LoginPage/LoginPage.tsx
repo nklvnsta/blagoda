@@ -2,6 +2,7 @@ import { useState, type SubmitEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoSrc from '/logo.png';
 import { useAuth } from '../../auth/AuthContext';
+import { defaultRouteForRole } from '../../navigation/access';
 import {
   BoxStackIcon,
   ChartTrendIcon,
@@ -37,8 +38,8 @@ export function LoginPage() {
     setSubmitting(true);
 
     try {
-      await login(username.trim(), password);
-      navigate('/', { replace: true });
+      const user = await login(username.trim(), password);
+      navigate(defaultRouteForRole(user.role), { replace: true });
     } catch {
       setError('Неверный логин или пароль');
     } finally {

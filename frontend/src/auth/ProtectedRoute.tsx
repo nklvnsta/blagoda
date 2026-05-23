@@ -1,30 +1,35 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { canAccessRoute, defaultRouteForRole, firstAllowedRoute } from '../navigation/access';
 import { useAuth } from './AuthContext';
 
 export function ProtectedRoute() {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return null;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (!canAccessRoute(user.role, location.pathname)) {
+    return <Navigate to={firstAllowedRoute(user.role)} replace />;
   }
 
   return <Outlet />;
 }
 
 export function GuestRoute() {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return null;
   }
 
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+  if (isAuthenticated && user) {
+    return <Navigate to={defaultRouteForRole(user.role)} replace />;
   }
 
   return <Outlet />;
