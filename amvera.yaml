@@ -1,5 +1,0 @@
-build:
-  dockerfile: backend/Dockerfile
-
-run:
-  containerPort: "8000"
