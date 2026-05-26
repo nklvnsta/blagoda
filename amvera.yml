@@ -5,7 +5,7 @@ meta:
     version: latest
 
 build:
-  dockerfile: backend/Dockerfile
+  dockerfile: Dockerfile
   skip: false
 
 run:
