@@ -1,1 +1,1 @@
-export const API_BASE = import.meta.env.VITE_API_BASE ?? 'https://blagoda-backend-nklvnsta.amvera.io';
+export const API_BASE = import.meta.env.VITE_API_BASE ?? 'https://blagoda-backend-nklvnsta.amvera.io/api';
