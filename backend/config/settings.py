@@ -25,10 +25,12 @@ import os
 DEBUG = os.getenv("DEBUG", "False") == "True"
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-dev-secret-key")
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
-CSRF_TRUSTED_ORIGINS = os.getenv(
-    "CSRF_TRUSTED_ORIGINS",
-    "http://localhost,http://127.0.0.1,http://blagoda-backend-nklvnsta.amvera.io,https://blagoda-frontend-nklvnsta.amvera.io"
-).split(",")
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://blagoda-backend-nklvnsta.amvera.io",
+    "https://blagoda-frontend-nklvnsta.amvera.io"
+]
 
 DATABASES = {
     "default": {
@@ -73,6 +75,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://blagoda-frontend-nklvnsta.amvera.io"
 ]
+CORS_ALLOWED_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
