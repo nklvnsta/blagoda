@@ -1,3 +1,6 @@
+meta:
+  enviroment: docker
+  
 build:
   dockerfile: backend/Dockerfile
 
