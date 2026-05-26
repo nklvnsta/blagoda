@@ -1,8 +1,12 @@
 meta:
-  enviroment: docker
-  
+  environment: docker
+  toolchain:
+    name: docker
+    version: latest
+
 build:
   dockerfile: backend/Dockerfile
+  skip: false
 
 run:
-  containerPort: "8000"
+  containerPort: 8000
