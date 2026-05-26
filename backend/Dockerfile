@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["sh", "-c", "python manage.py migrate && python manage.py shell -c \"import os; from django.contrib.auth import get_user_model; User=get_user_model(); username=os.getenv('ADMIN_USERNAME','admin'); password=os.getenv('ADMIN_PASSWORD','admin12345'); email=os.getenv('ADMIN_EMAIL','admin@example.com'); user, created = User.objects.get_or_create(username=username, defaults={'email': email}); user.email=email; user.is_staff=True; user.is_superuser=True; user.set_password(password); user.save(); print('Admin user ready:', username)\" && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "start.sh"]
