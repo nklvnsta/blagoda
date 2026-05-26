@@ -1,9 +1,8 @@
 {
+  "private": true,
   "scripts": {
-    "postinstall": "cd frontend && npm install",
-    "start": "cd frontend && npm run dev -- --host 0.0.0.0 --port 3000",
-    "dev": "cd frontend && npm run dev -- --host 0.0.0.0 --port 3000"
-  },
-  "dependencies": {},
-  "devDependencies": {}
+    "install-frontend": "npm --prefix frontend install",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run preview -- --host 0.0.0.0 --port 3000"
+  }
 }
