@@ -1,10 +1,5 @@
-meta:
-  environment: docker
-  toolchain: docker
-
 build:
   dockerfile: backend/Dockerfile
-  skip: false
 
 run:
   containerPort: "8000"
