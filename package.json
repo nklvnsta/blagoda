@@ -1,7 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "install-frontend": "npm --prefix frontend install --no-audit --no-fund",
+    "build": "npm --prefix frontend run build",
     "start": "npm --prefix frontend run preview -- --host 0.0.0.0 --port 3000"
   }
 }
