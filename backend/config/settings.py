@@ -30,6 +30,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
     "http://blagoda-backend-nklvnsta.amvera.io",
     "https://blagoda-frontend-nklvnsta.amvera.io"
+    "https://blagoda-forecast.ru"
 ]
 
 DATABASES = {
@@ -74,6 +75,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "https://blagoda-frontend-nklvnsta.amvera.io"
+    "https://blagoda-forecast.ru"
+
 ]
 CORS_ALLOWED_CREDENTIALS = True
 
