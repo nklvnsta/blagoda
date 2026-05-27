@@ -69,7 +69,7 @@ urlpatterns = [
     path("picking/<uuid:shop_id>/dispatch/", PickingDispatchView.as_view()),
     path("picking/<uuid:shop_id>/", PickingDetailView.as_view()),
     path("reports/<str:kind>/", ReportsView.as_view(), name="reports"),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
