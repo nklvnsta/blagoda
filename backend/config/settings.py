@@ -28,7 +28,7 @@ ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
     "http://127.0.0.1",
-    "http://blagoda-backend-nklvnsta.amvera.io",
+    "https://blagoda-backend-nklvnsta.amvera.io",
     "https://blagoda-frontend-nklvnsta.amvera.io"
     "https://blagoda-forecast.ru"
 ]
