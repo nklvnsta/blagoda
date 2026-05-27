@@ -7,3 +7,4 @@ python-decouple
 gunicorn
 openpyxl
 reportlab
+drf-spectacular==0.29.0
