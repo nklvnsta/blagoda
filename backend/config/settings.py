@@ -33,6 +33,13 @@ CSRF_TRUSTED_ORIGINS = [
     "https://blagoda-forecast.ru"
 ]
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Blagoda Forecast API',
+    'DESCRIPTION': 'API веб-приложения для прогнозирования спроса',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
