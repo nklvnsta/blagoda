@@ -33,6 +33,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://blagoda-forecast.ru"
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -58,11 +62,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "core",
     'drf_spectacular',
-    REST_FRAMEWORK = {
-
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-
-}
+ 
 ]
 
 MIDDLEWARE = [
