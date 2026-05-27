@@ -8,7 +8,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:
+        external: true
+        name: blagoda_postgres_data
     ports:
       - "5432:5432"
 
