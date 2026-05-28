@@ -13,7 +13,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'forecast', label: 'Прогноз спроса', to: '/forecast', roles: ['admin', 'logist'] },
   { id: 'supplies', label: 'Поставки', to: '/supplies', roles: ['admin', 'logist'] },
   { id: 'order-picking', label: 'Сбор заказа', to: '/picking', roles: ['admin', 'picker'] },
-  { id: 'reports', label: 'Отчеты', to: '/reports', roles: ['admin'] },
+  { id: 'reports', label: 'Отчеты', to: '/reports', roles: ['admin', 'logist'] },
 ];
 
 export function getNavigationItems(role: UserRole): NavigationItem[] {

@@ -38,6 +38,7 @@
   color: var(--color-text-primary);
   line-height: 1.1;
   min-width: 110px;
+  margin-left: 20px;
 }
 
 .footer {

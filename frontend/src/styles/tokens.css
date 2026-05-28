@@ -50,7 +50,7 @@
   --font-size-sm: 16px;               /* Body text, tabs, filters */
   --font-size-md: 18px;               /* Card titles, recommendations */
   --font-size-lg: 20px;               /* Section headings */
-  --font-size-xl: 30px;               /* KPI values ("114 шт.") */
+  --font-size-xl: 25px;               /* KPI values ("114 шт.") */
 
   --line-height-normal: normal;
   --letter-spacing-tight: -0.32px;    /* Small secondary labels */
