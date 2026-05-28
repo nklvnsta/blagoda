@@ -24,20 +24,22 @@ import os
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-dev-secret-key")
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS", 
+    "localhost,127.0.0.1,backend"
+    ).split(",")
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost",
-    "http://127.0.0.1",
-    "https://blagoda-backend-nklvnsta.amvera.io",
-    "https://blagoda-frontend-nklvnsta.amvera.io"
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://localhost:8000",
+    "https://127.0.0.1:8000",
+    "http://blagoda-backend-nklvnsta.amvera.io",
+    "https://blagoda-frontend-nklvnsta.amvera.io",
     "https://blagoda-forecast.ru"
 ]
 
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Blagoda Forecast API',
-    'DESCRIPTION': 'API веб-приложения для прогнозирования спроса',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 DATABASES = {
@@ -90,7 +92,6 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOWED_CREDENTIALS = True
 
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
