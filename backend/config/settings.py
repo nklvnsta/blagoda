@@ -33,7 +33,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "https://localhost:8000",
     "https://127.0.0.1:8000",
-    "http://blagoda-backend-nklvnsta.amvera.io",
+    "https://blagoda-backend-nklvnsta.amvera.io",
     "https://blagoda-frontend-nklvnsta.amvera.io",
     "https://blagoda-forecast.ru"
 ]
