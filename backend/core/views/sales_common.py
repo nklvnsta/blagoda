@@ -15,9 +15,13 @@ class ResolvedPeriod:
 
 
 PERIOD_PRESETS = (
+    ("yesterday", "Вчера"),
     ("last_7_days", "Последняя неделя"),
     ("last_30_days", "Последние 30 дней"),
     ("this_month", "Текущий месяц"),
+    ("last_month", "Последний месяц"),
+    ("last_3_months", "Последние 3 месяца"),
+    ("custom", "Произвольный период"),
 )
 
 PERIOD_LABELS = {code: label for code, label in PERIOD_PRESETS}
@@ -52,12 +56,29 @@ def resolve_period(
     if period_code is not None and period_code not in PERIOD_LABELS:
         raise ValidationError({"period": f"Неизвестный период: {period_code}."})
 
+    if period_code == "custom" and not (date_from_value and date_to_value):
+        raise ValidationError(
+            {"date": "Укажите date_from и date_to для произвольного периода."}
+        )
+
     today = date.today()
 
-    if period_code == "last_30_days":
+    if period_code == "yesterday":
+        yesterday = today - timedelta(days=1)
+        preset_from, preset_to = yesterday, yesterday
+    elif period_code == "last_30_days":
         preset_from, preset_to = today - timedelta(days=29), today
     elif period_code == "this_month":
         preset_from, preset_to = today.replace(day=1), today
+    elif period_code == "last_month":
+        first_this_month = today.replace(day=1)
+        last_day_prev = first_this_month - timedelta(days=1)
+        preset_from = last_day_prev.replace(day=1)
+        preset_to = last_day_prev
+    elif period_code == "last_3_months":
+        preset_from, preset_to = today - timedelta(days=89), today
+    elif period_code == "custom":
+        preset_from, preset_to = today, today
     else:
         preset_from, preset_to = default_period()
 
@@ -67,7 +88,7 @@ def resolve_period(
     if date_from > date_to:
         raise ValidationError({"date": "date_from не может быть позже date_to."})
 
-    if has_custom_dates:
+    if has_custom_dates or period_code == "custom":
         return ResolvedPeriod(
             code="custom",
             label="Произвольный период",

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApi } from '../../../api';
+import { buildFilterParams, useApi } from '../../../api';
 import { useDebouncedValue } from '../../../hooks';
 import type { SalesByShopsResponse, ShopSalesRow } from '../../../api/types';
 import styles from './SalesByShopsTable.module.css';
@@ -13,6 +13,8 @@ import {
 interface SalesByShopsTableProps {
   categoryId?: string;
   periodCode?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 type SortField = 'shop_name' | 'revenue' | 'sold_qty' | 'receipt_count';
@@ -64,7 +66,7 @@ const SHOP_COLUMNS: DataTableColumn<ShopSalesRow>[] = [
   },
 ];
 
-export function SalesByShopsTable({ categoryId, periodCode }: SalesByShopsTableProps) {
+export function SalesByShopsTable({ categoryId, periodCode, dateFrom, dateTo }: SalesByShopsTableProps) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortField>('revenue');
   const [order, setOrder] = useState<SortDirection>('desc');
@@ -72,8 +74,7 @@ export function SalesByShopsTable({ categoryId, periodCode }: SalesByShopsTableP
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const { data, loading } = useApi<SalesByShopsResponse>('/sales/by-shops/', {
-    category: categoryId,
-    period: periodCode,
+    ...buildFilterParams({ categoryId, periodCode, dateFrom, dateTo }),
     search: debouncedSearch || undefined,
     sort,
     order,

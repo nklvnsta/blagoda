@@ -7,7 +7,39 @@
 .filters-options {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-4);
+}
+
+.dateRange {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.dateField {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.dateLabel {
+    font-size: 13px;
+    color: var(--color-text-secondary, #7e7e7e);
+}
+
+.dateInput {
+    padding: 6px 10px;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.dateError {
+    margin: var(--space-2) 0 0;
+    font-size: 13px;
+    color: #b42318;
 }
 
 .filters-actions {

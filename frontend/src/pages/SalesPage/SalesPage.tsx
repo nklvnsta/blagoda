@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FiltersComponent } from "../../components/features/FiltersComponent";
 import type { FilterValues } from "../../components/features/FiltersComponent";
 import { StatCard } from "../../components/features/StatCard";
-import { useApi } from "../../api";
+import { buildFilterParams, useApi } from "../../api";
 import type {
   SalesData,
   SalesRevenueChartResponse,
@@ -21,17 +21,11 @@ export function SalesPage() {
     periodCode: undefined,
   });
 
-  const salesData = useApi<SalesData>('/sales/summary', {
-    shop: filters.shopId,
-    category: filters.categoryId,
-    period: filters.periodCode,
-  });
+  const filterParams = buildFilterParams(filters);
 
-  const salesChart = useApi<SalesRevenueChartResponse>('/sales/sales-chart/', {
-    shop: filters.shopId,
-    category: filters.categoryId,
-    period: filters.periodCode,
-  });
+  const salesData = useApi<SalesData>('/sales/summary', filterParams);
+
+  const salesChart = useApi<SalesRevenueChartResponse>('/sales/sales-chart/', filterParams);
 
   return (
     <div className="page">
@@ -71,6 +65,8 @@ export function SalesPage() {
           <SalesByShopsTable
             categoryId={filters.categoryId}
             periodCode={filters.periodCode}
+            dateFrom={filters.dateFrom}
+            dateTo={filters.dateTo}
           />
         </div>
         <div className={styles.tableSlot}>
@@ -78,6 +74,8 @@ export function SalesPage() {
             shopId={filters.shopId}
             categoryId={filters.categoryId}
             periodCode={filters.periodCode}
+            dateFrom={filters.dateFrom}
+            dateTo={filters.dateTo}
           />
         </div>
       </div>
