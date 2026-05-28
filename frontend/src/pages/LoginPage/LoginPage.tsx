@@ -62,7 +62,7 @@ export function LoginPage() {
           {FEATURES.map(({ icon: Icon, label }) => (
             <div key={label} className={styles.feature}>
               <div className={styles.featureIcon}>
-                <Icon size={48} />
+                <Icon size={60} />
               </div>
               <span className={styles.featureLabel}>{label}</span>
             </div>

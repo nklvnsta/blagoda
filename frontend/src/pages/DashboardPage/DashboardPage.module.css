@@ -1,6 +1,7 @@
 .deviationsBand {
   display: flex;
   align-items: stretch;
+  justify-content: center;
   gap: var(--space-5);
   width: 100%;
 }
@@ -8,6 +9,7 @@
 .criticalWrap {
   flex: 1 1 0;
   min-width: 0;
+  max-width: 500px;
 }
 
 .sepVertical {
