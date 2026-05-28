@@ -26,7 +26,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-dev-secret-key")
 ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS", 
-    "localhost,127.0.0.1,backend"
+    "localhost,127.0.0.1,backend, blagoda-backend-nklvnsta.amvera.io"
     ).split(",")
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
