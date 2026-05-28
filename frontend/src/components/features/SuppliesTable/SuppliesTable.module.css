@@ -81,6 +81,11 @@
     color: var(--color-text-secondary);
 }
 
+.pillReadyToShip {
+    background: #FFF3D6;
+    color: var(--color-text-primary);
+}
+
 .pillCancelled {
     background: #F7E0E0;
     color: var(--color-text-secondary);

@@ -143,7 +143,7 @@ export function PickingDetailPage() {
   const handleDispatch = async () => {
     if (!shopId) return;
     const ok = window.confirm(
-      'Отправить собранное на выгрузку? Несобранные позиции будут отменены.',
+      'Завершить сборку? Несобранные позиции будут отменены.',
     );
     if (!ok) return;
 
@@ -161,7 +161,7 @@ export function PickingDetailPage() {
       );
       navigate('/picking');
     } catch (err) {
-      window.alert(`Не удалось отправить: ${(err as Error).message}`);
+      window.alert(`Не удалось завершить сборку: ${(err as Error).message}`);
       setDispatching(false);
     }
   };
@@ -296,7 +296,7 @@ export function PickingDetailPage() {
               {saving ? 'Сохранение…' : 'Сохранить'}
             </Button>
             <Button type="primary" onClick={handleDispatch}>
-              {dispatching ? 'Отправка…' : 'Отправить на выгрузку'}
+              {dispatching ? 'Завершение…' : 'Завершить сборку'}
             </Button>
           </div>
         </div>

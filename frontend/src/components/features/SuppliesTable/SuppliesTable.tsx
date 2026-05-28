@@ -1,4 +1,8 @@
+import { useState } from 'react';
+import { apiMutate } from '../../../api';
 import type {
+  SuppliesDispatchPayload,
+  SuppliesDispatchResponse,
   SuppliesTableResponse,
   SuppliesTableSort,
   SupplyRow,
@@ -12,6 +16,7 @@ import {
   type SortDirection,
 } from '../SalesByShopsTable/DataTableWithSearch';
 import { FilterDropdown } from '../FilterDropdown';
+import { Button } from '../../ui/Button';
 
 interface SuppliesTableProps {
   data: SuppliesTableResponse | null;
@@ -23,6 +28,7 @@ interface SuppliesTableProps {
   onSortChange: (sort: SuppliesTableSort | null, order: SortDirection) => void;
   status: SupplyStatus | null;
   onStatusChange: (status: SupplyStatus | null) => void;
+  onDispatched?: () => void;
 }
 
 function formatCurrency(value: string | number): string {
@@ -41,6 +47,7 @@ function formatNumber(value: number): string {
 
 const STATUS_LABELS: Record<SupplyStatus, string> = {
   scheduled: 'запланирована',
+  ready_to_ship: 'готов к отправке',
   in_transit: 'в пути',
   delivered: 'доставлена',
   cancelled: 'отменена',
@@ -50,6 +57,7 @@ const ALL_STATUSES_VALUE = 'all';
 const STATUS_FILTER_OPTIONS: { label: string; value: string }[] = [
   { label: 'Все статусы', value: ALL_STATUSES_VALUE },
   { label: 'Запланирована', value: 'scheduled' },
+  { label: 'Готов к отправке', value: 'ready_to_ship' },
   { label: 'В пути', value: 'in_transit' },
   { label: 'Доставлена', value: 'delivered' },
 ];
@@ -60,41 +68,13 @@ function StatusPill({ status }: { status: SupplyStatus }) {
     status === 'in_transit' && styles.pillInTransit,
     status === 'delivered' && styles.pillDelivered,
     status === 'scheduled' && styles.pillScheduled,
+    status === 'ready_to_ship' && styles.pillReadyToShip,
     status === 'cancelled' && styles.pillCancelled,
   ]
     .filter(Boolean)
     .join(' ');
   return <span className={cls}>{STATUS_LABELS[status]}</span>;
 }
-
-const COLUMNS: DataTableColumn<SupplyRow>[] = [
-  {
-    id: 'shop_name',
-    header: 'Магазин',
-    className: tableStyles.tdShop,
-    cell: (row) => row.shop_name,
-  },
-  {
-    id: 'positions_count',
-    header: 'Позиций',
-    className: tableStyles.tdRight,
-    sortable: true,
-    cell: (row) => formatNumber(row.positions_count),
-  },
-  {
-    id: 'amount',
-    header: 'Сумма',
-    className: tableStyles.tdRight,
-    sortable: true,
-    cell: (row) => formatCurrency(row.amount),
-  },
-  {
-    id: 'status',
-    header: 'Статус',
-    className: tableStyles.tdRight,
-    cell: (row) => <StatusPill status={row.status} />,
-  },
-];
 
 interface PaginationProps {
   page: number;
@@ -137,7 +117,10 @@ export function SuppliesTable({
   onSortChange,
   status,
   onStatusChange,
+  onDispatched,
 }: SuppliesTableProps) {
+  const [dispatchingKey, setDispatchingKey] = useState<string | null>(null);
+
   const handleSortChange = (field: string, direction: SortDirection) => {
     if (field !== 'positions_count' && field !== 'amount') return;
     onSortChange(field, direction);
@@ -146,6 +129,69 @@ export function SuppliesTable({
   const handleStatusChange = (value: string) => {
     onStatusChange(value === ALL_STATUSES_VALUE ? null : (value as SupplyStatus));
   };
+
+  const handleDispatch = async (row: SupplyRow) => {
+    const key = `${row.shop_id}-${row.dispatch_date}`;
+    const ok = window.confirm(`Отправить поставку в магазин «${row.shop_name}»?`);
+    if (!ok) return;
+    setDispatchingKey(key);
+    try {
+      await apiMutate<SuppliesDispatchResponse, SuppliesDispatchPayload>(
+        '/supplies/dispatch/',
+        'POST',
+        { shop_id: row.shop_id, dispatch_date: row.dispatch_date },
+      );
+      onDispatched?.();
+    } catch (err) {
+      window.alert(`Не удалось отправить: ${(err as Error).message}`);
+    } finally {
+      setDispatchingKey(null);
+    }
+  };
+
+  const columns: DataTableColumn<SupplyRow>[] = [
+    {
+      id: 'shop_name',
+      header: 'Магазин',
+      className: tableStyles.tdShop,
+      cell: (row) => row.shop_name,
+    },
+    {
+      id: 'positions_count',
+      header: 'Позиций',
+      className: tableStyles.tdRight,
+      sortable: true,
+      cell: (row) => formatNumber(row.positions_count),
+    },
+    {
+      id: 'amount',
+      header: 'Сумма',
+      className: tableStyles.tdRight,
+      sortable: true,
+      cell: (row) => formatCurrency(row.amount),
+    },
+    {
+      id: 'status',
+      header: 'Статус',
+      className: tableStyles.tdRight,
+      cell: (row) => <StatusPill status={row.status} />,
+    },
+    {
+      id: 'action',
+      header: '',
+      className: tableStyles.tdRight,
+      cell: (row) => {
+        if (row.status !== 'ready_to_ship') return null;
+        const key = `${row.shop_id}-${row.dispatch_date}`;
+        const busy = dispatchingKey === key;
+        return (
+          <Button type="primary" onClick={busy ? () => undefined : () => handleDispatch(row)}>
+            {busy ? 'Отправка…' : 'Отправить'}
+          </Button>
+        );
+      },
+    },
+  ];
 
   const header = (
     <div className={styles.headerInner}>
@@ -179,7 +225,7 @@ export function SuppliesTable({
   return (
     <div className={styles.wrapper}>
       <DataTableWithSearch
-        columns={COLUMNS}
+        columns={columns}
         rows={rows}
         getRowKey={(row) => `${row.shop_id}-${row.dispatch_date}`}
         hideSearch

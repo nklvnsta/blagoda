@@ -202,7 +202,7 @@ export interface SalesByProductsResponse {
 
 // ── Supplies (Поставки) ──────────────────────────────────────────────────
 
-export type SupplyStatus = 'scheduled' | 'in_transit' | 'delivered' | 'cancelled';
+export type SupplyStatus = 'scheduled' | 'ready_to_ship' | 'in_transit' | 'delivered' | 'cancelled';
 
 export interface SuppliesFiltersResponse {
   shops: { id: string; name: string }[];
@@ -210,13 +210,24 @@ export interface SuppliesFiltersResponse {
 
 export interface SuppliesSummaryResponse {
   date: string;
-  shipped_qty_today: number;
-  shipped_amount_today: string;
-  in_transit_deliveries: number;
-  tomorrow_positions: number;
-  quantity_unit: string;
+  to_dispatch_count: number;
+  to_dispatch_amount: string;
+  shipped_count: number;
+  shipped_amount: string;
   currency: string;
   filters: Record<string, string | null>;
+}
+
+export interface SuppliesDispatchPayload {
+  shop_id: string;
+  dispatch_date: string;
+}
+
+export interface SuppliesDispatchResponse {
+  shop_id: string;
+  shop_name: string;
+  dispatch_date: string;
+  dispatched_count: number;
 }
 
 export interface ScheduledShopRow {
@@ -337,6 +348,6 @@ export interface PickingBulkSaveResponse {
 export interface PickingDispatchResponse {
   shop: { id: string; name: string };
   dispatch_date: string;
-  dispatched_count: number;
+  ready_count: number;
   cancelled_count: number;
 }

@@ -13,10 +13,7 @@ import {
   SuppliesFilters,
   type SuppliesFilterValues,
 } from '../../components/features/SuppliesFilters';
-import { ScheduledSuppliesPanel } from '../../components/features/ScheduledSuppliesPanel';
-import { InTransitSuppliesPanel } from '../../components/features/InTransitSuppliesPanel';
 import { SuppliesTable } from '../../components/features/SuppliesTable';
-import styles from './SuppliesPage.module.css';
 
 function toIsoDate(d: Date): string {
   const y = d.getFullYear();
@@ -50,6 +47,7 @@ export function SuppliesPage() {
   const [sort, setSort] = useState<SuppliesTableSort | null>(null);
   const [order, setOrder] = useState<SortDirection>('desc');
   const [statusFilter, setStatusFilter] = useState<SupplyStatus | null>(null);
+  const [tableBump, setTableBump] = useState(0);
 
   const handleApply = (next: SuppliesFilterValues) => {
     setFilters(next);
@@ -58,7 +56,7 @@ export function SuppliesPage() {
 
   const handleSortChange = (
     nextSort: SuppliesTableSort | null,
-    nextOrder: SortDirection
+    nextOrder: SortDirection,
   ) => {
     setSort(nextSort);
     setOrder(nextOrder);
@@ -70,9 +68,14 @@ export function SuppliesPage() {
     setPage(1);
   };
 
+  const handleDispatched = () => {
+    setTableBump((k) => k + 1);
+  };
+
   const summary = useApi<SuppliesSummaryResponse>('/supplies/summary/', {
     shop: filters.shopId,
     date: filters.date,
+    _: String(tableBump),
   });
 
   const table = useApi<SuppliesTableResponse>('/supplies/', {
@@ -82,6 +85,7 @@ export function SuppliesPage() {
     status: statusFilter ?? undefined,
     sort: sort ?? undefined,
     order: sort ? order : undefined,
+    _: String(tableBump),
   });
 
   return (
@@ -91,35 +95,30 @@ export function SuppliesPage() {
 
       <KPICardsRow>
         <StatCard
-          title="Отгружено сегодня"
-          value={summary.data ? formatNumber(summary.data.shipped_qty_today) : '—'}
-          unit={summary.data?.quantity_unit}
+          title="К отгрузке"
+          value={summary.data ? formatNumber(summary.data.to_dispatch_count) : '—'}
+          unit="поставок"
           loading={summary.loading}
         />
         <StatCard
           title="На сумму"
-          value={summary.data ? formatAmount(summary.data.shipped_amount_today) : '—'}
+          value={summary.data ? formatAmount(summary.data.to_dispatch_amount) : '—'}
           unit={summary.data?.currency ?? '₽'}
           loading={summary.loading}
         />
         <StatCard
-          title="В пути"
-          value={summary.data ? formatNumber(summary.data.in_transit_deliveries) : '—'}
-          unit={summary.data && summary.data.in_transit_deliveries === 1 ? 'поставка' : 'поставок'}
+          title="Отгружено"
+          value={summary.data ? formatNumber(summary.data.shipped_count) : '—'}
+          unit="поставок"
           loading={summary.loading}
         />
         <StatCard
-          title="К отгрузке завтра"
-          value={summary.data ? formatNumber(summary.data.tomorrow_positions) : '—'}
-          unit={summary.data?.quantity_unit}
+          title="На сумму"
+          value={summary.data ? formatAmount(summary.data.shipped_amount) : '—'}
+          unit={summary.data?.currency ?? '₽'}
           loading={summary.loading}
         />
       </KPICardsRow>
-
-      <div className={styles.panelsRow}>
-        <ScheduledSuppliesPanel shopId={filters.shopId} />
-        <InTransitSuppliesPanel shopId={filters.shopId} />
-      </div>
 
       <SuppliesTable
         data={table.data}
@@ -131,6 +130,7 @@ export function SuppliesPage() {
         onSortChange={handleSortChange}
         status={statusFilter}
         onStatusChange={handleStatusChange}
+        onDispatched={handleDispatched}
       />
     </div>
   );

@@ -85,10 +85,11 @@ class BatchShipment(models.Model):
     """
 
     class Status(models.TextChoices):
-        SCHEDULED  = "scheduled",  "Запланирована"
-        IN_TRANSIT = "in_transit", "В пути"
-        DELIVERED  = "delivered",  "Доставлена"
-        CANCELLED  = "cancelled",  "Отменена"
+        SCHEDULED     = "scheduled",     "Запланирована"
+        READY_TO_SHIP = "ready_to_ship", "Готов к отправке"
+        IN_TRANSIT    = "in_transit",    "В пути"
+        DELIVERED     = "delivered",     "Доставлена"
+        CANCELLED     = "cancelled",     "Отменена"
 
     class PickStatus(models.TextChoices):
         NOT_STARTED = "not_started", "Не начато"

@@ -6,9 +6,10 @@
 `dispatch_date = COALESCE(planned_dispatch_date, shipped_at::date)`.
 
 Статус группы:
-  - если среди линий есть scheduled  → scheduled
-  - иначе если есть in_transit       → in_transit
-  - иначе                            → delivered
+  - если среди линий есть scheduled     → scheduled
+  - иначе если есть ready_to_ship       → ready_to_ship
+  - иначе если есть in_transit          → in_transit
+  - иначе                               → delivered
   (cancelled-линии исключаются из расчётов)
 """
 
@@ -75,8 +76,9 @@ def group_status_annotation():
     возвращает строковый статус группы.
     """
     return Case(
-        When(scheduled_count__gt=0, then=Value(BatchShipment.Status.SCHEDULED)),
-        When(in_transit_count__gt=0, then=Value(BatchShipment.Status.IN_TRANSIT)),
+        When(scheduled_count__gt=0,     then=Value(BatchShipment.Status.SCHEDULED)),
+        When(ready_to_ship_count__gt=0, then=Value(BatchShipment.Status.READY_TO_SHIP)),
+        When(in_transit_count__gt=0,    then=Value(BatchShipment.Status.IN_TRANSIT)),
         default=Value(BatchShipment.Status.DELIVERED),
         output_field=BatchShipment._meta.get_field("status"),
     )
@@ -89,6 +91,13 @@ def group_status_counters():
         "scheduled_count": Sum(
             Case(
                 When(status=Status.SCHEDULED, then=1),
+                default=0,
+                output_field=IntegerField(),
+            )
+        ),
+        "ready_to_ship_count": Sum(
+            Case(
+                When(status=Status.READY_TO_SHIP, then=1),
                 default=0,
                 output_field=IntegerField(),
             )
