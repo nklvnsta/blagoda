@@ -18,7 +18,7 @@ interface ForecastDemandChartProps {
 const ACTUAL_COLOR = '#8D271B';
 const FORECAST_COLOR = '#536B8C';
 
-function formatWeek(dateStr: string): string {
+function formatDay(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 }
@@ -37,7 +37,7 @@ export function ForecastDemandChart({ data, loading }: ForecastDemandChartProps)
   }
 
   const points = data.points.map((p) => ({
-    week: formatWeek(p.week_start),
+    day: formatDay(p.date),
     actual: p.actual,
     forecast: p.forecast,
   }));
@@ -47,7 +47,7 @@ export function ForecastDemandChart({ data, loading }: ForecastDemandChartProps)
       <div className={styles.header}>
         <div>
           <div className={styles.title}>Прогноз спроса</div>
-          <div className={styles.subtitle}>за 6 месяцев, {data.unit}</div>
+          <div className={styles.subtitle}>за выбранный период, {data.unit}</div>
         </div>
         <div className={styles.legend}>
           <span className={styles.legendItem}>
@@ -77,7 +77,7 @@ export function ForecastDemandChart({ data, loading }: ForecastDemandChartProps)
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" vertical={false} />
 
           <XAxis
-            dataKey="week"
+            dataKey="day"
             tick={{ fontSize: 12, fill: '#7e7e7e' }}
             tickLine={false}
             axisLine={{ stroke: '#e5e5e5' }}
@@ -103,7 +103,7 @@ export function ForecastDemandChart({ data, loading }: ForecastDemandChartProps)
               const label = name === 'actual' ? 'Факт' : 'Прогноз';
               return [`${safe} шт.`, label];
             }}
-            labelFormatter={(label) => `Неделя с ${String(label)}`}
+            labelFormatter={(label) => `Дата: ${String(label)}`}
           />
 
           <Area

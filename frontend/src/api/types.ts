@@ -146,7 +146,7 @@ export interface ProductSalesRow {
 // ── Forecast (Прогноз спроса) ────────────────────────────────────────────
 
 export interface DemandChartPoint {
-  week_start: string;
+  date: string;
   actual: number;
   forecast: number | null;
 }

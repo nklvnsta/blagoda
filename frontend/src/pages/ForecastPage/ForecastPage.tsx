@@ -51,8 +51,10 @@ export function ForecastPage() {
           />
           <StatCard
             title="Точность прогноза"
+            title_additional="по графику"
             value={summary.data ? `${summary.data.accuracy_pct}` : '—'}
             unit="%"
+            footer_additional="дневные суммы за период"
             loading={summary.loading}
           />
         </KPICardsRow>

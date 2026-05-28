@@ -1,20 +1,16 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
-from django.db.models import Sum
-from django.db.models.functions import Coalesce, TruncWeek
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import ForecastEntry, Sales
+from core.views.forecast_chart_metrics import daily_actual_qty, daily_forecast_qty
 from core.views.sales_common import resolve_category_ids, resolve_period, validate_shop
 
-CHART_WEEKS = 26
 
-
-class DemandWeekPointSerializer(serializers.Serializer):
-    week_start = serializers.DateField(help_text="Понедельник недели")
+class DailyDemandPointSerializer(serializers.Serializer):
+    date = serializers.DateField(help_text="Дата")
     actual = serializers.IntegerField(help_text="Фактические продажи, шт.")
     forecast = serializers.IntegerField(
         allow_null=True,
@@ -26,7 +22,7 @@ class DemandChartResponseSerializer(serializers.Serializer):
     unit = serializers.CharField(help_text="Единица измерения")
     period_start = serializers.DateField()
     period_end = serializers.DateField()
-    points = DemandWeekPointSerializer(many=True)
+    points = DailyDemandPointSerializer(many=True)
     filters = serializers.DictField(help_text="Применённые фильтры")
 
 
@@ -34,7 +30,7 @@ class ForecastDemandChartView(APIView):
     """
     GET /api/forecast/demand-chart/?shop=<uuid>&category=<uuid>&period=last_7_days
 
-    Понедельные данные за последние 26 недель:
+    Ежедневные данные за выбранный период:
       actual   — фактические продажи (шт.)
       forecast — прогнозируемый спрос (шт.)
     """
@@ -51,78 +47,36 @@ class ForecastDemandChartView(APIView):
         validate_shop(shop_id)
         category_ids = resolve_category_ids(category_id)
 
-        today = date.today()
-        chart_start = today - timedelta(weeks=CHART_WEEKS)
-        chart_start -= timedelta(days=chart_start.weekday())
-
-        actual_map = self._actual_qty(chart_start, today, shop_id, category_ids)
-        forecast_map = self._forecast_qty(chart_start, today, shop_id, category_ids)
+        actual_map = daily_actual_qty(
+            period.date_from, period.date_to, shop_id, category_ids,
+        )
+        forecast_map = daily_forecast_qty(
+            period.date_from, period.date_to, shop_id, category_ids,
+        )
 
         points = []
-        cursor = chart_start
-        while cursor <= today:
+        cursor = period.date_from
+        while cursor <= period.date_to:
             points.append({
-                "week_start": cursor,
+                "date": cursor,
                 "actual": actual_map.get(cursor, 0),
                 "forecast": forecast_map.get(cursor),
             })
-            cursor += timedelta(weeks=1)
+            cursor += timedelta(days=1)
 
         data = {
             "unit": "шт.",
-            "period_start": chart_start,
-            "period_end": today,
+            "period_start": period.date_from,
+            "period_end": period.date_to,
             "points": points,
             "filters": {
                 "shop": shop_id,
                 "category": category_id,
                 "period": period.code,
+                "date_from": period.date_from.isoformat(),
+                "date_to": period.date_to.isoformat(),
             },
         }
 
         serializer = DemandChartResponseSerializer(data)
         return Response(serializer.data)
-
-    @staticmethod
-    def _actual_qty(
-        date_from: date,
-        date_to: date,
-        shop_id: str | None,
-        category_ids: list | None,
-    ) -> dict[date, int]:
-        qs = Sales.objects.filter(date__gte=date_from, date__lte=date_to)
-        if shop_id:
-            qs = qs.filter(shop_id=shop_id)
-        if category_ids:
-            qs = qs.filter(product__category_id__in=category_ids)
-
-        rows = (
-            qs
-            .annotate(week=TruncWeek("date"))
-            .values("week")
-            .annotate(total=Coalesce(Sum("quantity"), 0))
-            .order_by("week")
-        )
-        return {row["week"]: row["total"] for row in rows}
-
-    @staticmethod
-    def _forecast_qty(
-        date_from: date,
-        date_to: date,
-        shop_id: str | None,
-        category_ids: list | None,
-    ) -> dict[date, int | None]:
-        qs = ForecastEntry.objects.filter(date__gte=date_from, date__lte=date_to)
-        if shop_id:
-            qs = qs.filter(shop_id=shop_id)
-        if category_ids:
-            qs = qs.filter(product__category_id__in=category_ids)
-
-        rows = (
-            qs
-            .annotate(week=TruncWeek("date"))
-            .values("week")
-            .annotate(total=Coalesce(Sum("predicted_qty"), 0))
-            .order_by("week")
-        )
-        return {row["week"]: row["total"] for row in rows}
