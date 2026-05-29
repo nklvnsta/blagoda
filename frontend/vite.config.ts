@@ -8,7 +8,12 @@ export default defineConfig({
     react(), 
     VitePWA ({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico'],
+      includeAssets: [
+      'favicon.ico',
+      'icon-192.png',
+      'icon-512.png',
+      'logo.png'
+    ],
       manifest: {
         name: 'Blagoda',
         short_name: 'Blagoda',
