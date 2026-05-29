@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApi } from '../../../api';
+import { buildFilterParams, useApi } from '../../../api';
 import { useDebouncedValue } from '../../../hooks';
 import type {
   ForecastProductRow,
@@ -17,6 +17,8 @@ interface ForecastByProductsTableProps {
   shopId?: string;
   categoryId?: string;
   periodCode?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 type SortField = 'product_name' | 'forecast_qty' | 'previous_qty' | 'deviation_qty';
@@ -73,6 +75,8 @@ export function ForecastByProductsTable({
   shopId,
   categoryId,
   periodCode,
+  dateFrom,
+  dateTo,
 }: ForecastByProductsTableProps) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortField>('forecast_qty');
@@ -83,9 +87,7 @@ export function ForecastByProductsTable({
   const { data, loading } = useApi<ForecastByProductsResponse>(
     '/forecast/by-products/',
     {
-      shop: shopId,
-      category: categoryId,
-      period: periodCode,
+      ...buildFilterParams({ shopId, categoryId, periodCode, dateFrom, dateTo }),
       search: debouncedSearch || undefined,
       sort,
       order,

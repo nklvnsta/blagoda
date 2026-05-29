@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FiltersComponent } from '../../components/features/FiltersComponent';
 import type { FilterValues } from '../../components/features/FiltersComponent';
 import { StatCard } from '../../components/features/StatCard';
-import { useApi } from '../../api';
+import { buildFilterParams, useApi } from '../../api';
 import type {
   ForecastSummaryResponse,
   ForecastDemandChartResponse,
@@ -20,17 +20,11 @@ export function ForecastPage() {
     periodCode: undefined,
   });
 
-  const summary = useApi<ForecastSummaryResponse>('/forecast/summary/', {
-    shop: filters.shopId,
-    category: filters.categoryId,
-    period: filters.periodCode,
-  });
+  const filterParams = buildFilterParams(filters);
 
-  const chart = useApi<ForecastDemandChartResponse>('/forecast/demand-chart/', {
-    shop: filters.shopId,
-    category: filters.categoryId,
-    period: filters.periodCode,
-  });
+  const summary = useApi<ForecastSummaryResponse>('/forecast/summary/', filterParams);
+
+  const chart = useApi<ForecastDemandChartResponse>('/forecast/demand-chart/', filterParams);
 
   return (
     <div className="page">
@@ -42,28 +36,32 @@ export function ForecastPage() {
           <ForecastDemandChart data={chart.data} loading={chart.loading} />
         </div>
 
-        <KPICardsRow>
-          <StatCard
-            title="Ожидаемые продажи"
-            value={summary.data ? String(summary.data.expected_sales) : '—'}
-            unit={summary.data?.expected_sales_unit}
-            loading={summary.loading}
-          />
-          <StatCard
-            title="Точность прогноза"
-            title_additional="по графику"
-            value={summary.data ? `${summary.data.accuracy_pct}` : '—'}
-            unit="%"
-            footer_additional="дневные суммы за период"
-            loading={summary.loading}
-          />
-        </KPICardsRow>
+        <div className={styles.kpiSlot}>
+          <KPICardsRow>
+            <StatCard
+              title="Ожидаемые продажи"
+              value={summary.data ? String(summary.data.expected_sales) : '—'}
+              unit={summary.data?.expected_sales_unit}
+              loading={summary.loading}
+            />
+            <StatCard
+              title="Точность прогноза"
+              title_additional="по графику"
+              value={summary.data ? `${summary.data.accuracy_pct}` : '—'}
+              unit="%"
+              footer_additional="дневные суммы за период"
+              loading={summary.loading}
+            />
+          </KPICardsRow>
+        </div>
       </div>
 
       <ForecastByProductsTable
         shopId={filters.shopId}
         categoryId={filters.categoryId}
         periodCode={filters.periodCode}
+        dateFrom={filters.dateFrom}
+        dateTo={filters.dateTo}
       />
     </div>
   );

@@ -6,7 +6,7 @@ export const ROUTE_ACCESS: Record<string, UserRole[]> = {
   '/forecast': ['admin', 'logist'],
   '/supplies': ['admin', 'logist'],
   '/picking': ['admin', 'picker'],
-  '/reports': ['admin'],
+  '/reports': ['admin', 'logist'],
 };
 
 const ROUTE_PRIORITY = ['/', '/sales', '/forecast', '/supplies', '/picking', '/reports'] as const;

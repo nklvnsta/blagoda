@@ -4,7 +4,7 @@ from core.models import UserRole
 
 ROLE_PREFIXES: dict[str, tuple[str, ...] | None] = {
     UserRole.ADMIN: None,
-    UserRole.LOGIST: ("dashboard", "sales", "forecast", "supplies"),
+    UserRole.LOGIST: ("dashboard", "sales", "forecast", "supplies", "reports"),
     UserRole.PICKER: ("picking",),
 }
 

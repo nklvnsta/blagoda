@@ -34,6 +34,7 @@ ALLOWED_SORT_FIELDS = {"positions_count", "amount"}
 ALLOWED_ORDERS = {"asc", "desc"}
 ALLOWED_STATUSES = {
     BatchShipment.Status.SCHEDULED,
+    BatchShipment.Status.READY_TO_SHIP,
     BatchShipment.Status.IN_TRANSIT,
     BatchShipment.Status.DELIVERED,
 }

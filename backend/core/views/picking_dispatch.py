@@ -6,10 +6,10 @@ Bulk-операции для одной сборки (магазин, dispatch_d
     Body: { "items": [ { "id": "<uuid>", "picked_quantity": <int>=0 }, ... ] }
 
   POST /api/picking/<uuid:shop_id>/dispatch/
-    «Отправить на выгрузку»: переводит все scheduled-строки группы:
+    Завершение сборки: переводит все scheduled-строки группы:
       picked_quantity == 0  → status = cancelled
-      picked_quantity > 0   → quantity_shipped := picked_quantity, status = in_transit
-    BatchShipment.save() сам списывает остатки партии.
+      picked_quantity > 0   → quantity_shipped := picked_quantity, status = ready_to_ship
+    Списание остатков партии происходит позже при отправке с страницы «Поставки».
 """
 
 from datetime import date as date_cls
@@ -119,14 +119,13 @@ class PickingDispatchView(APIView):
                     cancelled_count += 1
                 else:
                     line.quantity_shipped = pq
-                    line.status = BatchShipment.Status.IN_TRANSIT
-                    line.save()  # триггерит списание batch.quantity_remaining
+                    line.status = BatchShipment.Status.READY_TO_SHIP
+                    line.save(update_fields=["quantity_shipped", "status"])
                     dispatched_count += 1
 
-        # После dispatch строки группы уже не scheduled — отвечаем сводкой.
         return Response({
             "shop": {"id": str(shop.id), "name": shop.name},
             "dispatch_date": target_date,
-            "dispatched_count": dispatched_count,
+            "ready_count": dispatched_count,
             "cancelled_count": cancelled_count,
         })
