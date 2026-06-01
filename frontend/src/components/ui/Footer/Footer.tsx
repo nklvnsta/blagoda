@@ -19,7 +19,7 @@ export function Footer({
   return (
     <footer className={`${styles.footer} ${className ?? ''}`}>
       <div className={styles.info}>
-        <div>&copy; ООО Динисалл, {now.getFullYear()} | Оптимизация товарных потоков | v{version}</div>
+        <div>&copy; ООО Динисалл, {now.getFullYear()} | Прогнозирование спроса в розничной сети | v{version}</div>
         <div>Пользователь: {userName} | Роль: {roleLabel}</div>
         <div>Обновление данных: {time} | Статус: актуально</div>
       </div>

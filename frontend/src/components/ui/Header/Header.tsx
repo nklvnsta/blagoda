@@ -26,7 +26,7 @@ export function Header({ className }: HeaderProps) {
         </button>
 
         <img src={logoSrc} alt="Благода" className={styles.logo} />
-        <span className={styles.title}>Оптимизация товарных потоков</span>
+        <span className={styles.title}> Сиситема прогнозирования спроса </span>
 
         <div className={styles.spacer} />
 

@@ -9,7 +9,7 @@ email = os.getenv("ADMIN_EMAIL", "admin@example.com")
 
 user, created = User.objects.get_or_create(
     username=username,
-    defaults={"email": emamil}
+    defaults={"email": email}
 )
 
 user.email = email

@@ -52,10 +52,9 @@ export function LoginPage() {
       <section className={styles.infoPanel} aria-label="О системе">
         <img src={logoSrc} alt="Благода" className={styles.logo} />
 
-        <h1 className={styles.infoTitle}>Оптимизация товарных потоков</h1>
+        <h1 className={styles.infoTitle}> Прогнозирование спроса в розничной сети </h1>
         <p className={styles.infoDescription}>
-          Система предназначена для прогнозирования спроса, контроля остатков и формирования
-          поставок для розничной сети «Благода»
+          Анализ продаж, контроль остатков и планирование поставок «Благода»
         </p>
 
         <div className={styles.features}>
