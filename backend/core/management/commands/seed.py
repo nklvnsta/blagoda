@@ -29,7 +29,7 @@ from core.models import (
 )
 
 
-# ─── Данные ──────────────────────────────────────────────────────────────────
+# Данные 
 
 CATEGORIES = [
     {
@@ -115,9 +115,7 @@ SHOPS = [
     },
 ]
 
-# (name, unit, price, shelf_life_days, category, avg_sales_per_day)
-# Цены в приднестровских рублях (ПМР), курс: 1 RUB ≈ 0.22 PMR
-# avg_sales_per_day — среднее кол-во единиц за день в одном магазине
+
 PRODUCTS = [
     # Молочные
     ("Молоко Благода пастер. 2.5% 1л пак.",          "l",   16.00,   7,  "Молоко",               6),
@@ -230,8 +228,7 @@ class Command(BaseCommand):
             f"точность прогноза {accuracy_pct}%"
         ))
 
-    # ── Категории ────────────────────────────────────────────────────────────
-
+    # Категории 
     def _seed_categories(self):
         self.stdout.write("Создаём категории...")
         cat_map = {}
@@ -250,8 +247,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  → {len(cat_map)} категорий")
         return cat_map
 
-    # ── Магазины ─────────────────────────────────────────────────────────────
-
+    #  Магазины 
     def _seed_shops(self):
         self.stdout.write("Создаём магазины...")
         shops = []
@@ -264,8 +260,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  → {len(shops)} магазинов")
         return shops
 
-    # ── Товары ───────────────────────────────────────────────────────────────
-
+    #  Товары 
     def _seed_products(self, categories):
         self.stdout.write("Создаём товары...")
         products = []
@@ -285,8 +280,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  → {len(products)} товаров")
         return products
 
-    # ── Партии ───────────────────────────────────────────────────────────────
-
+    #  Партии 
     def _seed_batches(self, products):
         self.stdout.write("Создаём партии...")
         today   = date.today()
@@ -328,8 +322,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  → {Batch.objects.count()} партий")
         return batches
 
-    # ── Отгрузки ─────────────────────────────────────────────────────────────
-
+    #  Отгрузки 
     def _seed_shipments(self, batches, shops):
         self.stdout.write("Создаём отгрузки...")
         today     = date.today()
@@ -371,8 +364,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f"  → {len(shipments)} отгрузок")
 
-    # ── Продажи ──────────────────────────────────────────────────────────────
-
+    #  Продажи 
     def _seed_sales(self, products, shops):
         self.stdout.write("Создаём продажи (180 дней) и чеки...")
         today = date.today()
@@ -392,12 +384,12 @@ class Command(BaseCommand):
                 for day_offset in range(SALES_PERIOD_DAYS):
                     d = today - timedelta(days=day_offset)
 
-                    weekday_factor = WEEKDAY_FACTORS[d.weekday()]
-                    seasonal = 1.0 + 0.15 * math.sin(2 * math.pi * d.timetuple().tm_yday / 365)
-                    trend = 1.0 + 0.0005 * (SALES_PERIOD_DAYS - day_offset)
+                    weekday_factor = WEEKDAY_FACTORS[d.weekday()]    #считается продажа за день
+                    seasonal = 1.0 + 0.15 * math.sin(2 * math.pi * d.timetuple().tm_yday / 365)  #недельная сезонность   
+                    trend = 1.0 + 0.0005 * (SALES_PERIOD_DAYS - day_offset)   
 
                     mean = base * shop_factor * weekday_factor * seasonal * trend
-                    qty  = max(0, int(random.gauss(mean, mean * SALES_NOISE_STDEV)))
+                    qty  = max(0, int(random.gauss(mean, mean * SALES_NOISE_STDEV)))   #примерное среднее значение
 
                     if qty > 0:
                         sales_data.append((product, shop, qty, d, product.price))
@@ -426,8 +418,7 @@ class Command(BaseCommand):
                 current_receipt_items.append(sale_item)
 
                 if len(current_receipt_items) >= items_per_receipt or sale_item == sales_in_group[-1]:
-                    # Сумма чека считается как price × 1 (один товар на позицию),
-                    # а не price × суточный_объём.
+                    # Сумма чека считается как price × 1 (один товар на позицию)
                     total_amount = sum(
                         float(item['price_at_sale'])
                         for item in current_receipt_items
@@ -470,8 +461,7 @@ class Command(BaseCommand):
 
         return (sales_list, receipt_list)
 
-    # ── Остатки (Inventory) ──────────────────────────────────────────────────
-
+    #  Остатки (Inventory) 
     def _seed_inventory(self, products, shops):
         self.stdout.write("Создаём остатки...")
         inventories = []
@@ -481,13 +471,13 @@ class Command(BaseCommand):
 
             for shop in shops:
                 shop_avg = base_avg * _shop_factor(product.sku, shop.name)
-                safety   = random.choice([2, 3, 4])
+                safety   = random.choice([2, 3, 4])   
                 cycle    = random.choice([5, 7, 10])
 
-                min_stock = int(shop_avg * safety)
-                max_stock = int(shop_avg * (safety + cycle))
+                min_stock = int(shop_avg * safety)   #сред продажа за день * на запас в 2-4 дня
+                max_stock = int(shop_avg * (safety + cycle))   #сред продажа в день * запас на бол кол-во дней
 
-                roll = random.random()
+                roll = random.random()          
                 if roll < 0.15:
                     current_qty = random.randint(0, max(1, min_stock - 1))
                 elif roll < 0.25:
@@ -512,8 +502,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  → {len(inventories)} остатков")
         return inventories
 
-    # ── Отклонения (StockDeviation) ──────────────────────────────────────────
-
+    #  Отклонения (StockDeviation) 
     def _seed_deviations(self, inventories):
         self.stdout.write("Создаём отклонения...")
         deviations = []
@@ -537,8 +526,7 @@ class Command(BaseCommand):
         StockDeviation.objects.bulk_create(deviations, batch_size=200)
         self.stdout.write(f"  → {len(deviations)} отклонений ({sum(1 for d in deviations if d.deviation_type == 'deficit')} дефицитов, {sum(1 for d in deviations if d.deviation_type == 'surplus')} избытков)")
 
-    # ── Снимки остатков (InventorySnapshot) ──────────────────────────────────
-
+    #  Снимки остатков (InventorySnapshot) 
     def _seed_snapshots(self, products, shops):
         self.stdout.write("Создаём снимки остатков (30 дней)...")
         today     = date.today()
@@ -575,8 +563,7 @@ class Command(BaseCommand):
         InventorySnapshot.objects.bulk_create(snapshots, batch_size=500, ignore_conflicts=True)
         self.stdout.write(f"  → {len(snapshots)} снимков")
 
-    # ── Прогнозы (ForecastEntry) ───────────────────────────────────────────
-
+    #  Прогнозы
     def _build_sales_index(self, days_back: int) -> dict[tuple, int]:
         today = date.today()
         sales_index: dict[tuple, int] = {}
@@ -588,7 +575,7 @@ class Command(BaseCommand):
             sales_index[(sale["product_id"], sale["shop_id"], sale["date"])] = sale["total"]
         return sales_index
 
-    def _rolling_avg(
+    def _rolling_avg(     
         self,
         sales_index: dict[tuple, int],
         product_id,
@@ -596,15 +583,15 @@ class Command(BaseCommand):
         d: date,
         fallback: float,
     ) -> float:
-        total = sum(
+        total = sum(   #средне скользящее
             sales_index.get((product_id, shop_id, d - timedelta(days=i)), 0)
             for i in range(1, ROLLING_WINDOW_DAYS + 1)
         )
-        if total == 0:
+        if total == 0:    
             return fallback
         return total / ROLLING_WINDOW_DAYS
 
-    def _predict_qty(
+    def _predict_qty(        #средн скольз * коэфиц дня недели * небольш случ шум 
         self,
         rolling_avg: float,
         weekday: int,
@@ -693,7 +680,7 @@ class Command(BaseCommand):
             ),
         )
         mean_error = result["mean_error"] or 0.0
-        accuracy_pct = round(max(0.0, (1.0 - mean_error)) * 100, 1)
+        accuracy_pct = round(max(0.0, (1.0 - mean_error)) * 100, 1)    #точность прогноза
         style = self.style.SUCCESS if accuracy_pct >= min_pct else self.style.WARNING
         self.stdout.write(style(f"  → Точность прогноза: {accuracy_pct}%"))
         return accuracy_pct
