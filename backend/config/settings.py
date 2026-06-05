@@ -24,10 +24,14 @@ import os
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-dev-secret-key")
-ALLOWED_HOSTS = os.getenv(
-    "ALLOWED_HOSTS", 
-    "localhost,127.0.0.1,backend,blagoda-backend-nklvnsta.amvera.io"
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        "ALLOWED_HOSTS", 
+        "localhost,127.0.0.1,backend,blagoda-backend-nklvnsta.amvera.io,amvera-nklvnsta-run-blagoda-backend.amvera-users.svc.cluster.local"
     ).split(",")
+    if host.strip()
+]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
