@@ -76,8 +76,8 @@ class SalesSummaryView(APIView):
         )
 
         receipt_queryset = Receipt.objects.filter(
-            created_at__date__gte=period.date_from,
-            created_at__date__lte=period.date_to,
+            date__gte=period.date_from,
+            date__lte=period.date_to,
         )
         if shop_id:
             receipt_queryset = receipt_queryset.filter(shop_id=shop_id)

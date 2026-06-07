@@ -105,8 +105,8 @@ class SalesByShopsView(APIView):
 
             receipt_qs = Receipt.objects.filter(
                 shop=shop,
-                created_at__date__gte=period.date_from,
-                created_at__date__lte=period.date_to,
+                date__gte=period.date_from,
+                date__lte=period.date_to,
             )
             if category_ids:
                 receipt_qs = receipt_qs.filter(sales__product__category_id__in=category_ids)

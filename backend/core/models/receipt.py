@@ -6,6 +6,7 @@ class Receipt(models.Model):
 
     id              = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shop            = models.ForeignKey("core.Shop", on_delete=models.CASCADE, related_name="receipts")
+    date            = models.DateField(null=True, blank=True, db_index=True)
     total_amount    = models.DecimalField(max_digits=10, decimal_places=2)  # общая сумма чека
     item_count      = models.IntegerField(default=0)  # количество позиций в чеке
     total_qty       = models.IntegerField(default=0)  # общее количество товаров в чеке

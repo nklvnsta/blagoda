@@ -44,8 +44,8 @@ class SalesReport(ReportBuilder):
             date__lte=self.date_to,
         )
         receipt_qs = Receipt.objects.filter(
-            created_at__date__gte=self.date_from,
-            created_at__date__lte=self.date_to,
+            date__gte=self.date_from,
+            date__lte=self.date_to,
         )
         if self.shop_id:
             sales_qs = sales_qs.filter(shop_id=self.shop_id)

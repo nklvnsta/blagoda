@@ -135,8 +135,8 @@ class SalesRevenueChartView(APIView):
         category_ids: list | None,
     ) -> dict:
         queryset = Receipt.objects.filter(
-            created_at__date__gte=date_from,
-            created_at__date__lte=date_to,
+            date__gte=date_from,
+            date__lte=date_to,
         )
         if shop_id:
             queryset = queryset.filter(shop_id=shop_id)

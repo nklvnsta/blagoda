@@ -425,6 +425,7 @@ class Command(BaseCommand):
                     )
                     receipt = Receipt(
                         shop_id=shop_id,
+                        date=sale_date,
                         total_amount=total_amount,
                         item_count=len(current_receipt_items),
                         total_qty=len(current_receipt_items),
