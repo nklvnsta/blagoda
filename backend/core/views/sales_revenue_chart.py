@@ -2,7 +2,7 @@ from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.db.models import Count, DecimalField, F, Sum
-from django.db.models.functions import Coalesce, TruncDate
+from django.db.models.functions import Coalesce
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -147,8 +147,7 @@ class SalesRevenueChartView(APIView):
 
         rows = (
             queryset
-            .annotate(day=TruncDate("created_at"))
-            .values("day")
+            .values("date")
             .annotate(
                 receipt_count=Count("id", distinct=True),
                 receipt_amount=Coalesce(
@@ -160,7 +159,7 @@ class SalesRevenueChartView(APIView):
                     output_field=DecimalField(max_digits=14, decimal_places=2),
                 ),
             )
-            .order_by("day")
+            .order_by("date")
         )
 
         result = {}
@@ -171,6 +170,6 @@ class SalesRevenueChartView(APIView):
                 if receipt_count
                 else None
             )
-            result[row["day"]] = avg_ticket
+            result[row["date"]] = avg_ticket
 
         return result
