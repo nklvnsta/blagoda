@@ -17,6 +17,7 @@ import {
 } from '../SalesByShopsTable/DataTableWithSearch';
 import { FilterDropdown } from '../FilterDropdown';
 import { Button } from '../../ui/Button';
+import { SupplyEditModal } from './SupplyEditModal';
 
 interface SuppliesTableProps {
   data: SuppliesTableResponse | null;
@@ -120,6 +121,7 @@ export function SuppliesTable({
   onDispatched,
 }: SuppliesTableProps) {
   const [dispatchingKey, setDispatchingKey] = useState<string | null>(null);
+  const [editingRow, setEditingRow] = useState<SupplyRow | null>(null);
 
   const handleSortChange = (field: string, direction: SortDirection) => {
     if (field !== 'positions_count' && field !== 'amount') return;
@@ -181,14 +183,31 @@ export function SuppliesTable({
       header: '',
       className: tableStyles.tdRight,
       cell: (row) => {
-        if (row.status !== 'ready_to_ship') return null;
         const key = `${row.shop_id}-${row.dispatch_date}`;
         const busy = dispatchingKey === key;
-        return (
-          <Button type="primary" onClick={busy ? () => undefined : () => handleDispatch(row)}>
-            {busy ? 'Отправка…' : 'Отправить'}
-          </Button>
-        );
+
+        if (row.status === 'ready_to_ship') {
+          return (
+            <Button type="primary" onClick={busy ? () => undefined : () => handleDispatch(row)}>
+              {busy ? 'Отправка…' : 'Отправить'}
+            </Button>
+          );
+        }
+
+        if (row.status === 'scheduled') {
+          return (
+            <button
+              type="button"
+              className={styles.editBtn}
+              onClick={() => setEditingRow(row)}
+              title="Редактировать позиции"
+            >
+              ✎ Изменить
+            </button>
+          );
+        }
+
+        return null;
       },
     },
   ];
@@ -247,6 +266,11 @@ export function SuppliesTable({
             />
           ) : undefined
         }
+      />
+      <SupplyEditModal
+        row={editingRow}
+        onClose={() => setEditingRow(null)}
+        onSaved={() => { onDispatched?.(); }}
       />
     </div>
   );

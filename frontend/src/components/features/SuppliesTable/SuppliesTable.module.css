@@ -121,11 +121,29 @@
 }
 
 .pageNumber {
-    min-width: 24px;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-    font-weight: var(--font-weight-regular);
-    color: var(--color-text-primary);
+  min-width: 24px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+}
+
+.editBtn {
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.editBtn:hover {
+  background: var(--color-bg-surface-muted);
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-primary);
 }
 
 @media (max-width: 768px) {

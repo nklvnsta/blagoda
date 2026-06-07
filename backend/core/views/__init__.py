@@ -17,6 +17,7 @@ from .supplies_scheduled import SuppliesScheduledView
 from .supplies_in_transit import SuppliesInTransitView
 from .supplies_table import SuppliesTableView
 from .supplies_dispatch import SuppliesDispatchView
+from .supplies_items import SupplyItemsListView, SupplyItemPatchView
 from .picking_filters import PickingFiltersView
 from .picking_summary import PickingSummaryView
 from .picking_today import PickingTodayView
@@ -49,6 +50,8 @@ __all__ = [
     "SuppliesInTransitView",
     "SuppliesTableView",
     "SuppliesDispatchView",
+    "SupplyItemsListView",
+    "SupplyItemPatchView",
     "PickingFiltersView",
     "PickingSummaryView",
     "PickingTodayView",

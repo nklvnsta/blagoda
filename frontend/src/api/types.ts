@@ -279,6 +279,27 @@ export interface SuppliesTableResponse {
 
 export type SuppliesTableSort = 'positions_count' | 'amount';
 
+export interface SupplyItem {
+  id: string;
+  product_name: string;
+  product_sku: string;
+  unit: string;
+  quantity_shipped: number;
+  price: string;
+  amount: string;
+  status: SupplyStatus;
+  editable: boolean;
+}
+
+export interface SupplyItemsResponse {
+  count: number;
+  results: SupplyItem[];
+}
+
+export interface SupplyItemPatchPayload {
+  quantity_shipped: number;
+}
+
 // ── Picking (Сбор заказа) ────────────────────────────────────────────────
 
 export type GroupPickStatus = 'not_started' | 'in_progress' | 'partial' | 'picked';
